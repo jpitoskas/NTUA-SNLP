@@ -3,7 +3,7 @@ import sys
 import os
 import re
 import subprocess
-
+from math import *
 
 # Dynamic Programming algorithm to find Levenshtein Distance between two words
 def LevenshteinDistance(str1, str2, m, n):
@@ -132,12 +132,10 @@ res = read_file(path, tokenize)
 
 # test = read_file(sys.argv[1], tokenize)
 
-# print(len(res))
 
 # Unique words of a list
 tokens = list(set(res))
 
-# print(len(tokens))
 
 all_words = ''.join(tokens)
 
@@ -169,3 +167,18 @@ char_probability_dict = defaultdict(lambda:0, char_probability_dict)
 for i in range(len(res)):
     for j in range(len(res[i])):
         char_probability_dict[res[i][j]] = char_probability_dict[res[i][j]] + 1/num_of_letters
+
+# find a mean word weight
+word_weights = 0
+for token in tokens:
+    word_weights = word_weights - log(word_probability_dict[token], 2)
+mean_word_weight = word_weights/len(tokens)
+
+
+# find a mean char weight
+char_weights = 0
+for char in alphabet:
+    char_weights = char_weights - log(char_probability_dict[char], 2)
+mean_char_weight = char_weights/len(alphabet)
+
+# converter(alphabet, mean_char_weight)
