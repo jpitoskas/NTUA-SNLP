@@ -1,0 +1,7 @@
+*.zip
+*.fst
+*.jpg
+*.txt
+!The Adventures of Sherlock Holmes, by Arthur Conan Doyle.txt
+!Around the World in 80 Days, by Jules Verne.txt
+Lab_01/openfst-1.6.1
