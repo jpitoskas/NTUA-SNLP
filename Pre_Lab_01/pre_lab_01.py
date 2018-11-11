@@ -81,23 +81,24 @@ def testing(words):
 
 def acceptoras(tokens, weight, output):
     acceptor = open(output, 'w')
-    s = 1
+    s = 0
     for token in tokens:
-        acceptor.write(
-            format_arc(
-                src=0, dst=s, src_sym="<epsilon>", dst_sym="<epsilon>", w=weight))
+        if (s != 0):
+            acceptor.write(
+                format_arc(
+                    src=0, dst=s, src_sym="<epsilon>", dst_sym="<epsilon>", w=weight))
         letters = list(token)
         for i in range(0, len(letters)):
             acceptor.write(
                 format_arc(
                     src=s, dst=s+1, src_sym=letters[i], dst_sym=letters[i], w=weight))
             s += 1
-            # if (i == len(letters) - 1):
-            #     acceptor.write(
-            #         format_arc(
-            #             src=s, dst=0, src_sym='<epsilon>', dst_sym='<epsilon>', w=0))
-        acceptor.write(str(s)+'\n')
+            if (i == len(letters) - 1):
+                acceptor.write(
+                    format_arc(
+                        src=s, dst=0, src_sym='<epsilon>', dst_sym='<epsilon>', w=weight))
         s += 1
+    acceptor.write(str(0)+'\n')
     acceptor.close()
 
 
@@ -110,7 +111,7 @@ def acceptoras(tokens, weight, output):
 #     # p3.wait()
 
 # Find absolute path
-path = os.path.abspath("Around the World in 80 Days, by Jules Verne.txt")
+path = os.path.abspath("test.txt")
 
 res = read_file(path, tokenize)
 
