@@ -36,16 +36,16 @@ def tokenize(s):
     s = s.split(' ')
     return s
 
-def syms(alphabet):
+def syms(alphabet, output):
     alphabet.sort()
-    out = open('chars.syms', 'w')
+    out = open(output, 'w')
     out.write('<epsilon> 0\n')
     for index in range(len(alphabet)):
         out.write(str(alphabet[index])+' '+str(index+1)+'\n')
     out.close()
 
-def converter(alphabet, w):
-    converter = open('converter.txt', 'w')
+def converter(alphabet, w, output):
+    converter = open(output, 'w')
     for i in range(len(alphabet)+1):
         for j in range(len(alphabet)+1):
             if (i == 0):
@@ -79,22 +79,25 @@ def testing(words):
 
 
 
-def acceptoras(tokens):
-    acceptor = open('acceptor.txt', 'w')
+def acceptoras(tokens, weight, output):
+    acceptor = open(output, 'w')
+    s = 1
     for token in tokens:
-        s = 1
+        acceptor.write(
+            format_arc(
+                src=0, dst=s, src_sym="<epsilon>", dst_sym="<epsilon>", w=weight))
         letters = list(token)
         for i in range(0, len(letters)):
             acceptor.write(
                 format_arc(
-                    src=s, dst=s+1, src_sym=letters[i], dst_sym=letters[i], w=0))
+                    src=s, dst=s+1, src_sym=letters[i], dst_sym=letters[i], w=weight))
             s += 1
-            if (i == len(letters) - 1):
-                acceptor.write(
-                    format_arc(
-                        src=s, dst=0, src_sym='<epsilon>', dst_sym='<epsilon>', w=0))
-        s += 1
+            # if (i == len(letters) - 1):
+            #     acceptor.write(
+            #         format_arc(
+            #             src=s, dst=0, src_sym='<epsilon>', dst_sym='<epsilon>', w=0))
         acceptor.write(str(s)+'\n')
+        s += 1
     acceptor.close()
 
 
@@ -111,7 +114,7 @@ path = os.path.abspath("Around the World in 80 Days, by Jules Verne.txt")
 
 res = read_file(path, tokenize)
 
-test = read_file(sys.argv[1], tokenize)
+# test = read_file(sys.argv[1], tokenize)
 
 # print(len(res))
 
@@ -126,15 +129,15 @@ all_words = ''.join(tokens)
 alphabet = list(set(all_words))
 
 # Create the chars.syms file
-syms(alphabet)
+syms(alphabet, 'chars.syms')
 
-converter(alphabet, 1)
+converter(alphabet, 1, 'converter.txt')
 
-acceptoras(tokens)
+acceptoras(tokens, 0, 'acceptor.txt')
 
 # runsubprocesses()
 
-testing(test)
+# testing(test)
 
 # print(conv)
 
