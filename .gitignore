@@ -6,3 +6,4 @@
 !Around the World in 80 Days, by Jules Verne.txt
 *.tar
 *.gz
+/Lab_01/aclImdb
