@@ -66,17 +66,19 @@ pos_train = read_samples(pos_train_dir, tokenize)
 # Create corpus from train sets
 corpus_train = create_corpus(pos_train, neg_train)
 
-# print(corpus_train[0])
+corpus_train_joined = ''.join(corpus_train)
+
+print(corpus_train[0])
 
 # Transform using Count Vectorizer
-cnt_vectorizer = CountVectorizer()
-BoW = cnt_vectorizer.fit_transform(corpus_train[0])
+# cnt_vectorizer = CountVectorizer()
+# BoW = cnt_vectorizer.fit_transform(corpus_train[0])
 
 # print(BoW.toarray())
 
 # Transform using tf-idf Vectorizer
-tfidf_vectorizer = TfidfVectorizer()
-BoW = tfidf_vectorizer.fit_transform(corpus_train[0])
+# tfidf_vectorizer = TfidfVectorizer()
+# BoW = tfidf_vectorizer.fit_transform(corpus_train[0])
 
 # print(pos_train)
 

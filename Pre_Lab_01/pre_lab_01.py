@@ -93,12 +93,12 @@ def acceptoras(tokens, weight, output):
                 format_arc(
                     src=s, dst=s+1, src_sym=letters[i], dst_sym=letters[i], w=weight))
             s += 1
-            if (i == len(letters) - 1):
-                acceptor.write(
-                    format_arc(
-                        src=s, dst=0, src_sym='<epsilon>', dst_sym='<epsilon>', w=weight))
+            # if (i == len(letters) - 1):
+            #     acceptor.write(
+            #         format_arc(
+            #             src=s, dst=0, src_sym='<epsilon>', dst_sym='<epsilon>', w=weight))
+        acceptor.write(str(s)+'\n')
         s += 1
-    acceptor.write(str(0)+'\n')
     acceptor.close()
 
 
