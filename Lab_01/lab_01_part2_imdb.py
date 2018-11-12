@@ -1,6 +1,7 @@
 import sys
 import os
 import re
+import itertools
 from sklearn.feature_extraction.text import CountVectorizer
 # import subprocess
 from math import *
@@ -66,15 +67,15 @@ pos_train = read_samples(pos_train_dir, tokenize)
 # Create corpus from train sets
 corpus_train = create_corpus(pos_train, neg_train)
 
-corpus_train_joined = ''.join(corpus_train)
+corpus_train_joined = list(itertools.chain.from_iterable(corpus_train[0]))
 
-print(corpus_train[0])
+# print(corpus_train_joined)
 
 # Transform using Count Vectorizer
-# cnt_vectorizer = CountVectorizer()
-# BoW = cnt_vectorizer.fit_transform(corpus_train[0])
+cnt_vectorizer = CountVectorizer()
+BoW = cnt_vectorizer.fit_transform(corpus_train_joined)
 
-# print(BoW.toarray())
+print(BoW)
 
 # Transform using tf-idf Vectorizer
 # tfidf_vectorizer = TfidfVectorizer()
