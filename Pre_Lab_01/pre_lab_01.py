@@ -66,9 +66,9 @@ def converter(alphabet, w, output):
     converter.write(str(0)+'\n')
     converter.close()
 
-def testing(words):
+def testing(words, output):
     for word in words:
-        testing = open('testing.txt', 'w')
+        testing = open(output, 'w')
         letters = list(word)
         s = 0
         for i in range(len(letters)):
@@ -78,21 +78,24 @@ def testing(words):
     testing.close()
 
 
-
 def acceptoras(tokens, weight, output):
     acceptor = open(output, 'w')
-    s = 0
+    s = 1
+    acceptor.write(
+        format_arc(
+            src=0, dst=0, src_sym="<epsilon>", dst_sym="<epsilon>", w=weight))
     for token in tokens:
-        if (s != 0):
-            acceptor.write(
-                format_arc(
-                    src=0, dst=s, src_sym="<epsilon>", dst_sym="<epsilon>", w=weight))
         letters = list(token)
         for i in range(0, len(letters)):
-            acceptor.write(
-                format_arc(
-                    src=s, dst=s+1, src_sym=letters[i], dst_sym=letters[i], w=weight))
-            s += 1
+            if (i == 0):
+                acceptor.write(
+                    format_arc(
+                        src=0, dst=s, src_sym=letters[i], dst_sym=letters[i], w=weight))
+            else:
+                acceptor.write(
+                    format_arc(
+                        src=s, dst=s+1, src_sym=letters[i], dst_sym=letters[i], w=weight))
+                s += 1
             # if (i == len(letters) - 1):
             #     acceptor.write(
             #         format_arc(
@@ -111,11 +114,11 @@ def acceptoras(tokens, weight, output):
 #     # p3.wait()
 
 # Find absolute path
-path = os.path.abspath("test.txt")
+path = os.path.abspath("Around the World in 80 Days, by Jules Verne.txt")
 
 res = read_file(path, tokenize)
 
-# test = read_file(sys.argv[1], tokenize)
+test = read_file(sys.argv[1], tokenize)
 
 # print(len(res))
 
@@ -136,9 +139,9 @@ converter(alphabet, 1, 'converter.txt')
 
 acceptoras(tokens, 0, 'acceptor.txt')
 
-# runsubprocesses()
+testing(test, 'test_input.txt')
 
-# testing(test)
+# runsubprocesses()
 
 # print(conv)
 
