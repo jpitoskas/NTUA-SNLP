@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-python3 pre_lab_01.py "test.txt"
+python3 lab_01_part1_spell_checker.py "test.txt"
 
 # Create FSTs
 fstcompile --isymbols=chars.syms --osymbols=chars.syms converter.txt > converter.fst
