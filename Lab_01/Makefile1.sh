@@ -38,3 +38,8 @@ fstshortestpath ortho_input_sorted.fst > min_dist.fst
 # Draw/Print minimum distance transducer
 fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait min_dist.fst | dot -Tjpg > min_dist.jpg
 fsttopsort min_dist.fst | fstprint --isymbols=chars.syms --osymbols=chars.syms - > min_dist.txt
+
+cut -f4 min_dist.txt |
+grep -v "<epsilon>" |
+head -n -1 |
+tr -d '\n' > prediction.txt
