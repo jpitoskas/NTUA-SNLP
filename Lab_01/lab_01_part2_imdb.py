@@ -3,6 +3,10 @@ import os
 import re
 import itertools
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 # import subprocess
 from math import *
 import numpy as np
@@ -60,6 +64,13 @@ def create_corpus(pos, neg):
     np.random.shuffle(indices)
     return list(corpus[indices]), list(y[indices])
 
+ def simple_lr_classify(X_tr, y_tr, X_test, y_test, description):
+     # Helper function to train a logistic classifier and score on test data
+     clf_LR = LogisticRegression().fit(X_tr, y_tr)
+     score = clf_LR.score(X_test, y_test)
+     print('Test score with', description, ': ', score)
+     return clf_LR
+
 # Load train sets
 neg_train = read_samples(neg_train_dir, tokenize)
 pos_train = read_samples(pos_train_dir, tokenize)
@@ -67,19 +78,25 @@ pos_train = read_samples(pos_train_dir, tokenize)
 # Create corpus from train sets
 corpus_train = create_corpus(pos_train, neg_train)
 
+# print(corpus_train[0][3])
+# print(corpus_train[1][3])
+
+x_train = corpus_train[0]
+y_train = corpus_train[1]
+
 corpus_train_joined = list(itertools.chain.from_iterable(corpus_train[0]))
 
 # print(corpus_train_joined)
 
 # Transform using Count Vectorizer
-cnt_vectorizer = CountVectorizer()
-BoW = cnt_vectorizer.fit_transform(corpus_train_joined)
+BoW = CountVectorizer().fit_transform(corpus_train_joined)
 
-print(BoW)
+# print(BoW)
+
+clf_LR = LogisticRegression().fit(x_train, y_train)
 
 # Transform using tf-idf Vectorizer
-# tfidf_vectorizer = TfidfVectorizer()
-# BoW = tfidf_vectorizer.fit_transform(corpus_train[0])
+# BoW = TfidfVectorizer().fit_transform(corpus_train[0])
 
 # print(pos_train)
 
