@@ -6,7 +6,7 @@ import gensim
 from gensim.test.utils import common_texts, get_tmpfile
 from gensim.models import Word2Vec
 from random import randint
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 # from sklearn import metrics
 # from sklearn.metrics import classification_report
@@ -29,15 +29,15 @@ neg_test_dir = os.path.join(test_dir, 'neg')
 
 # For memory limitations. These parameters fit in 8GB of RAM. (5000)
 # If you have 16G of RAM you can experiment with the full dataset / W2V
-MAX_NUM_SAMPLES = 2
+MAX_NUM_SAMPLES = 2500
 # Load first 1M word embeddings. This works because GoogleNews are roughly
 # sorted from most frequent to least frequent.
 # It may yield much worse results for other embeddings corpora
 NUM_W2V_TO_LOAD = 1000000
 
 # Fix numpy random seed for reproducibility
-SEED = 42
-np.random.seed(42)
+SEED = 17
+np.random.seed(SEED)
 
 def tokenize(s):
     s = s.strip()
@@ -70,10 +70,13 @@ def create_corpus(pos, neg):
 
 def simple_lr_classify(X_tr, y_tr, X_test, y_test, description):
     # Helper function to train a logistic classifier and score on test data
-    clf_LR = LogisticRegression(solver='liblinear').fit(X_tr, y_tr)
-    # clf_LR.predict(X_test)
-    print('Test score with', description, ': ', clf_LR.score(X_test, y_test))
-    # return clf_LR
+    min_shape = min(X_test.shape[1], X_tr.shape[1])
+    LR = LogisticRegression(solver='liblinear')
+    clf_LR = LR.fit(X_tr[:, :min_shape], y_tr)
+    # clf_LR = clf_LR.fit(X_test, y_test)
+    # LR.predict(X_test)
+    print('Test score with', description, ': ', clf_LR.score(X_test[:, :min_shape], y_test))
+    return clf_LR
 
 # Load pretrained w2v model from Pre Lab 01
 model = Word2Vec.load('word2vec.model')
@@ -93,36 +96,40 @@ corpus_train = create_corpus(pos_train, neg_train)
 # Create corpus from test sets
 corpus_test = create_corpus(pos_test, neg_test)
 
-# corpus_train_joined = list(itertools.chain.from_iterable(corpus_train[0]))
-
-# print(x_train[1])
+# print(len(corpus_train[0]))
 
 # Transform using Count Vectorizer for train
-BoW_train = CountVectorizer().fit_transform(corpus_train[0])
+cntVect = CountVectorizer()
+BoW_cntVect_train = cntVect.fit_transform(corpus_train[0])
 
 # Transform using Count Vectorizer for test
-BoW_test = CountVectorizer().fit_transform(corpus_test[0])
+BoW_cntVect_test = cntVect.fit_transform(corpus_test[0])
 
-x_train = BoW_train
+# print(len(cntVect.vocabulary_))
+
+x_train = BoW_cntVect_train
 y_train = corpus_train[1]
 
 # print(x_train.shape)
 # print(len(y_train))
 
-x_test = BoW_test
+x_test = BoW_cntVect_test
 y_test = corpus_test[1]
 
 # print(x_test.shape)
 # print(len(y_test))
 
-simple_lr_classify(x_train, y_train, x_test, y_test, "bourda")
+clf_cntVect = simple_lr_classify(x_train, y_train, x_test, y_test, "Count Vectorizer")
+# print(clf)
 
-# Transform using tf-idf Vectorizer
-# BoW = TfidfVectorizer().fit_transform(corpus_train[0])
+# Transform using tf-idf for train
+TfiDfVect = TfidfVectorizer()
+BoW_TfiDf_train = TfiDfVect.fit_transform(corpus_train[0])
 
-# print(pos_train)
+# Transform using tf-idf for test
+BoW_TfiDf_test = TfiDfVect.fit_transform(corpus_test[0])
 
-# Load test set
-# test = read_samples(test_dir, tokenize)
+x_train = BoW_TfiDf_train
+x_test = BoW_TfiDf_test
 
-# print(test)
+clf_TfiDf = simple_lr_classify(x_train, y_train, x_test, y_test, "Tf-iDf")
