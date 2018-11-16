@@ -55,7 +55,6 @@ model.train(res, total_examples=len(res), epochs=1000)
 
 # get ordered vocabulary list
 voc = model.wv.index2word
-
 # print(voc)
 
 # get vector size
