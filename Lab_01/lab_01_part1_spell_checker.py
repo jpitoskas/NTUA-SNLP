@@ -74,7 +74,9 @@ def testing(words, output):
         letters = list(word)
         s = 0
         for i in range(len(letters)):
-            testing.write(str(s)+' '+str(s+1)+' '+str(letters[i])+' '+str(letters[i])+'\n')
+            testing.write(
+                format_arc(
+                    src=s, dst=s+1, src_sym=letters[i], dst_sym=letters[i], w=0))
             s += 1
         testing.write(str(s)+'\n')
     testing.close()
@@ -102,10 +104,64 @@ def acceptoras(tokens, weight, output):
             #     acceptor.write(
             #         format_arc(
             #             src=s, dst=0, src_sym='<epsilon>', dst_sym='<epsilon>', w=weight))
-        acceptor.write(str(s)+'\n')
-        s += 1
+        if (len(letters) != 0):
+            acceptor.write(str(s)+'\n')
+            s += 1
     acceptor.close()
 
+def acceptor_word_level(tokens, dictionary, output):
+    acceptor = open(output, 'w')
+    s = 1
+    acceptor.write(
+        format_arc(
+            src=0, dst=0, src_sym="<epsilon>", dst_sym="<epsilon>", w=0))
+    for token in tokens:
+        letters = list(token)
+        for i in range(0, len(letters)):
+            if (i == 0):
+                acceptor.write(
+                    format_arc(
+                        src=0, dst=s, src_sym=letters[i], dst_sym=letters[i], w=-log(dictionary[token], 2)))
+            else:
+                acceptor.write(
+                    format_arc(
+                        src=s, dst=s+1, src_sym=letters[i], dst_sym=letters[i], w=0))
+                s += 1
+            # if (i == len(letters) - 1):
+            #     acceptor.write(
+            #         format_arc(
+            #             src=s, dst=0, src_sym='<epsilon>', dst_sym='<epsilon>', w=weight))
+        if (len(letters) != 0):
+            acceptor.write(str(s)+'\n')
+            s += 1
+    acceptor.close()
+
+def acceptor_unigram(tokens, dictionary, output):
+    acceptor = open(output, 'w')
+    s = 1
+    acceptor.write(
+        format_arc(
+            src=0, dst=0, src_sym="<epsilon>", dst_sym="<epsilon>", w=0))
+    for token in tokens:
+        letters = list(token)
+        for i in range(0, len(letters)):
+            if (i == 0):
+                acceptor.write(
+                    format_arc(
+                        src=0, dst=s, src_sym=letters[i], dst_sym=letters[i], w=-log(dictionary[letters[i]], 2)))
+            else:
+                acceptor.write(
+                    format_arc(
+                        src=s, dst=s+1, src_sym=letters[i], dst_sym=letters[i], w=-log(dictionary[letters[i]], 2)))
+                s += 1
+            # if (i == len(letters) - 1):
+            #     acceptor.write(
+            #         format_arc(
+            #             src=s, dst=0, src_sym='<epsilon>', dst_sym='<epsilon>', w=weight))
+        if (len(letters) != 0):
+            acceptor.write(str(s)+'\n')
+            s += 1
+    acceptor.close()
 
 # def runsubprocesses():
 #     p1 = subprocess.Popen("fstcompile --isymbols=chars.syms --osymbols=chars.syms converter.txt > converter.fst")
@@ -174,4 +230,22 @@ for char in alphabet:
 mean_char_weight = char_weights/len(alphabet)
 
 # Create transducer for mean weight of letters
-converter(alphabet, mean_char_weight, "converter_letters.txt")
+converter(alphabet, mean_char_weight, "converter_unigram.txt")
+
+acceptor_word_level(tokens, word_probability_dict, "acceptor_word_level.txt")
+acceptor_unigram(tokens, char_probability_dict, "acceptor_unigram.txt")
+
+# dictionary to match each pair of adjacent chars of the book to its likelihood of occurrence
+pairs = []
+for i in range(len(res)):
+    for j in range(len(res[i]) - 1):
+        char_pair = str(res[i][j]) + str(res[i][j+1])
+        pairs.append(char_pair)
+
+# Unique pairs of chars of a list
+unique_pairs = list(set(pairs))
+
+pair_probability_dict = {}
+pair_probability_dict = defaultdict(lambda:0, pair_probability_dict)
+for i in range(len(pairs)):
+    pair_probability_dict[pairs[i]] = pair_probability_dict[pairs[i]] + 1/len(pairs)
