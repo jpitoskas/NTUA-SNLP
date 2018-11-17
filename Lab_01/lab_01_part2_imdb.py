@@ -29,7 +29,7 @@ neg_test_dir = os.path.join(test_dir, 'neg')
 
 # For memory limitations. These parameters fit in 8GB of RAM. (5000)
 # If you have 16G of RAM you can experiment with the full dataset / W2V
-MAX_NUM_SAMPLES = 25000
+MAX_NUM_SAMPLES = 1000
 # Load first 1M word embeddings. This works because GoogleNews are roughly
 # sorted from most frequent to least frequent.
 # It may yield much worse results for other embeddings corpora
@@ -156,16 +156,16 @@ for word in voc_test:
 oov = 100 * oov_cnt / len(voc_test)
 # print('Percentage of OOV words: ' + str(oov) + ' %')
 
-# corpus = [
-# 'All my cats in a row row',
-# 'When my cat sits down, she looks like a Furby toy!',
-# 'The cat from outer space',
-# 'Sunshine loves to sit like this for some reason.'
-# ]
+corpus = [
+'All my cats in a row row',
+'When my cat sits down, she looks like a Furby toy!',
+'The cat from outer space',
+'Sunshine loves to sit like this for some reason.'
+]
 
 # corpus = corpus_train[0]
-# vectorizer = CountVectorizer()
-# # vectorizer.fit_transform(corpus).todense()
+vectorizer = CountVectorizer()
+print(vectorizer.fit_transform(corpus).todense())
 # # vectorizer.vocabulary_
 # y_train = corpus_train[1]
 # X_train = vectorizer.fit_transform(corpus)
