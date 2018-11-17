@@ -29,14 +29,14 @@ neg_test_dir = os.path.join(test_dir, 'neg')
 
 # For memory limitations. These parameters fit in 8GB of RAM. (5000)
 # If you have 16G of RAM you can experiment with the full dataset / W2V
-MAX_NUM_SAMPLES = 5000
+MAX_NUM_SAMPLES = 25000
 # Load first 1M word embeddings. This works because GoogleNews are roughly
 # sorted from most frequent to least frequent.
 # It may yield much worse results for other embeddings corpora
 NUM_W2V_TO_LOAD = 1000000
 
 # Fix numpy random seed for reproducibility
-SEED = 17
+SEED = 42
 np.random.seed(SEED)
 
 def tokenize(s):
@@ -70,14 +70,25 @@ def create_corpus(pos, neg):
 
 def simple_lr_classify(X_tr, y_tr, X_test, y_test, description):
     # Helper function to train a logistic classifier and score on test data
-    min_shape = min(X_test.shape[1], X_tr.shape[1])
+    # min_shape = min(X_test.shape[1], X_tr.shape[1])
     LR = LogisticRegression(solver='liblinear')
-    clf_LR = LR.fit(X_tr[:, :min_shape], y_tr)
+    clf_LR = LR.fit(X_tr, y_tr)
     # clf_LR = clf_LR.fit(X_test, y_test)
     # LR.predict(X_test)
-    print('Test score with', description, ': ', clf_LR.score(X_test[:, :min_shape], y_test))
+    print('Test score with', description, ': ', clf_LR.score(X_test, y_test))
     return clf_LR
 
+def test_classification(corpus_train, corpus_test, ):
+    corpus = corpus_train[0]
+    vectorizer = CountVectorizer()
+    # vectorizer.fit_transform(corpus).todense()
+    # vectorizer.vocabulary_
+    y_train = corpus_train[1]
+    X_train = vectorizer.fit_transform(corpus)
+    classifier = LogisticRegression(solver='liblinear')
+    clf = classifier.fit(X_train, y_train)
+    X_test = vectorizer.transform(corpus_test[0])
+    print('Test score with', description, ': ', clf.score(X_test, y_test))
 
 # Load train sets
 neg_train = read_samples(neg_train_dir, tokenize)
@@ -95,6 +106,8 @@ corpus_test = create_corpus(pos_test, neg_test)
 
 # print(len(corpus_train[0]))
 
+# test_classification(corpus_train, corpus_test, "Count Vectorizer")
+
 # Transform using Count Vectorizer for train
 cntVect = CountVectorizer()
 BoW_cntVect_train = cntVect.fit_transform(corpus_train[0])
@@ -102,7 +115,7 @@ voc_train = list(cntVect.vocabulary_.keys())
 
 
 # Transform using Count Vectorizer for test
-BoW_cntVect_test = cntVect.fit_transform(corpus_test[0])
+BoW_cntVect_test = cntVect.transform(corpus_test[0])
 voc_test = list(cntVect.vocabulary_.keys())
 
 x_train = BoW_cntVect_train
@@ -125,7 +138,7 @@ TfiDfVect = TfidfVectorizer()
 BoW_TfiDf_train = TfiDfVect.fit_transform(corpus_train[0])
 
 # Transform using tf-idf for test
-BoW_TfiDf_test = TfiDfVect.fit_transform(corpus_test[0])
+BoW_TfiDf_test = TfiDfVect.transform(corpus_test[0])
 
 x_train = BoW_TfiDf_train
 x_test = BoW_TfiDf_test
@@ -141,4 +154,25 @@ for word in voc_test:
     if word not in voc:
         oov_cnt += 1
 oov = 100 * oov_cnt / len(voc_test)
-print('Percentage of OOV words: ' + str(oov) + ' %')
+# print('Percentage of OOV words: ' + str(oov) + ' %')
+
+# corpus = [
+# 'All my cats in a row row',
+# 'When my cat sits down, she looks like a Furby toy!',
+# 'The cat from outer space',
+# 'Sunshine loves to sit like this for some reason.'
+# ]
+
+# corpus = corpus_train[0]
+# vectorizer = CountVectorizer()
+# # vectorizer.fit_transform(corpus).todense()
+# # vectorizer.vocabulary_
+# y_train = corpus_train[1]
+# X_train = vectorizer.fit_transform(corpus)
+# classifier = LogisticRegression(solver='liblinear')
+# clf = classifier.fit(X_train, y_train)
+# X_test = vectorizer.transform(corpus_test[0])
+# print()
+# print(clf.score(X_test, y_test))
+# predictions = classifier.predict(X_test)
+# print(predictions)
