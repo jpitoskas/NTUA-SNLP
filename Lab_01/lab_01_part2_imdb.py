@@ -138,9 +138,7 @@ voc = model.wv.index2word
 
 oov_cnt = 0
 for word in voc_test:
-    if word not in voc_train:
+    if word not in voc:
         oov_cnt += 1
 oov = 100 * oov_cnt / len(voc_test)
 print('Percentage of OOV words: ' + str(oov) + ' %')
-
-google_model = KeyedVectors.load_word2vec_format('./GoogleNews-vectorsnegative300.bin', binary=True, limit=NUM_W2V_TO_LOAD)
