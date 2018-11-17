@@ -29,7 +29,7 @@ neg_test_dir = os.path.join(test_dir, 'neg')
 
 # For memory limitations. These parameters fit in 8GB of RAM. (5000)
 # If you have 16G of RAM you can experiment with the full dataset / W2V
-MAX_NUM_SAMPLES = 2500
+MAX_NUM_SAMPLES = 5000
 # Load first 1M word embeddings. This works because GoogleNews are roughly
 # sorted from most frequent to least frequent.
 # It may yield much worse results for other embeddings corpora
@@ -78,9 +78,6 @@ def simple_lr_classify(X_tr, y_tr, X_test, y_test, description):
     print('Test score with', description, ': ', clf_LR.score(X_test[:, :min_shape], y_test))
     return clf_LR
 
-# Load pretrained w2v model from Pre Lab 01
-model = Word2Vec.load('word2vec.model')
-voc = model.wv.index2word
 
 # Load train sets
 neg_train = read_samples(neg_train_dir, tokenize)
@@ -101,11 +98,12 @@ corpus_test = create_corpus(pos_test, neg_test)
 # Transform using Count Vectorizer for train
 cntVect = CountVectorizer()
 BoW_cntVect_train = cntVect.fit_transform(corpus_train[0])
+voc_train = list(cntVect.vocabulary_.keys())
+
 
 # Transform using Count Vectorizer for test
 BoW_cntVect_test = cntVect.fit_transform(corpus_test[0])
-
-# print(len(cntVect.vocabulary_))
+voc_test = list(cntVect.vocabulary_.keys())
 
 x_train = BoW_cntVect_train
 y_train = corpus_train[1]
@@ -133,3 +131,16 @@ x_train = BoW_TfiDf_train
 x_test = BoW_TfiDf_test
 
 clf_TfiDf = simple_lr_classify(x_train, y_train, x_test, y_test, "Tf-iDf")
+
+# Load pretrained w2v model from Pre Lab 01
+model = Word2Vec.load('word2vec.model')
+voc = model.wv.index2word
+
+oov_cnt = 0
+for word in voc_test:
+    if word not in voc_train:
+        oov_cnt += 1
+oov = 100 * oov_cnt / len(voc_test)
+print('Percentage of OOV words: ' + str(oov) + ' %')
+
+google_model = KeyedVectors.load_word2vec_format('./GoogleNews-vectorsnegative300.bin', binary=True, limit=NUM_W2V_TO_LOAD)
