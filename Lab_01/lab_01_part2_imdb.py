@@ -147,18 +147,34 @@ for word in voc_test:
 oov = 100 * oov_cnt / len(voc_test)
 print('Percentage of OOV words: ' + str(oov) + ' %')
 
-# Transform using Word2Vec representation for train
+tf_train = {}
+df_train = {}
+tfidf_train = {}
+# Transform using Neural Bag of Words representation for train
 NBoW_train = np.zeros((len(corpus_train[0]), model.vector_size))
 for i in range(len(corpus_train[0])):
     comment = corpus_train[0][i]
     words = comment.split(' ')
+    comment_terms = len(comment)
+    word_set = list(set(words))
+    for term in word_set:
+        df_train[term] += 1 / len(corpus_train[0])
     repr = np.zeros(model.vector_size)
     for word in words:
+        term_cnt = 0
         if (word in voc):
+            for term in comment:
+                if (term == word):
+                    term_cnt += 1
+            tf = term_cnt / comment_terms
+            tf_train[word] = tf
             repr = repr + model.wv[word]
+        df_train[word] += 1
     NBoW_train[i] = repr/len(words)
+for term in df_train.keys():
+    tfidf_train[term] = log(1 / df_train[term])
 
-# Transform using Word2Vec representation for test
+# Transform using Neural Bag of Words representation for test
 NBoW_test = np.zeros((len(corpus_test[0]), model.vector_size))
 for i in range(len(corpus_test[0])):
     comment = corpus_test[0][i]
@@ -169,8 +185,19 @@ for i in range(len(corpus_test[0])):
             repr = repr + model.wv[word]
     NBoW_test[i] = repr/len(words)
 
-# Call train and evaluate function for Word2Vec representation
-clf_cntVect = simple_lr_classify(NBoW_train, y_train, NBoW_test, y_test, "Word2Vec")
+# Call train and evaluate function for Neural Bag of Words representation
+clf_cntVect = simple_lr_classify(NBoW_train, y_train, NBoW_test, y_test, "NBoW")
+
+# Transform using Neural Bag of Words with Tf-iDf representation for train
+NBoW_tfidf_train = np.zeros((len(corpus_train[0]), model.vector_size))
+for i in range(len(corpus_train[0])):
+    comment = corpus_train[0][i]
+    words = comment.split(' ')
+    repr = np.zeros(model.vector_size)
+    for word in words:
+        if (word in voc):
+            repr = repr + model.wv[word] * tfidf_train[word]
+    NBoW_tfidf_train[i] = repr/len(words)
 
 # Load pretrained Google model over all GoogleNews
 google_model = KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True, limit=NUM_W2V_TO_LOAD)
