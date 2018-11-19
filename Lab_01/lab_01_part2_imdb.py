@@ -151,6 +151,7 @@ tf_train = {}
 df_train = {}
 tfidf_train = {}
 # Transform using Neural Bag of Words representation for train
+# Also find weight for Tf-iDf
 NBoW_train = np.zeros((len(corpus_train[0]), model.vector_size))
 for i in range(len(corpus_train[0])):
     comment = corpus_train[0][i]
@@ -158,32 +159,55 @@ for i in range(len(corpus_train[0])):
     comment_terms = len(comment)
     word_set = list(set(words))
     for term in word_set:
-        df_train[term] += 1 / len(corpus_train[0])
+        if (term != '' and term in voc):
+            if (term not in df_train.keys()):
+                df_train[term] = 0
+            df_train[term] += 1 / len(corpus_train[0])
     repr = np.zeros(model.vector_size)
     for word in words:
-        term_cnt = 0
-        if (word in voc):
-            for term in comment:
-                if (term == word):
-                    term_cnt += 1
-            tf = term_cnt / comment_terms
-            tf_train[word] = tf
-            repr = repr + model.wv[word]
-        df_train[word] += 1
+        if (word != ''):
+            term_cnt = 0
+            if (word in voc):
+                for term in comment:
+                    if (term == word):
+                        term_cnt += 1
+                tf = term_cnt / comment_terms
+                tf_train[word] = tf
+                repr = repr + model.wv[word]
     NBoW_train[i] = repr/len(words)
 for term in df_train.keys():
-    tfidf_train[term] = log(1 / df_train[term])
+    tfidf_train[term] = tf_train[term] * log(1 / df_train[term])
 
+tf_test = {}
+df_test = {}
+tfidf_test = {}
 # Transform using Neural Bag of Words representation for test
+# Also find weight for Tf-iDf
 NBoW_test = np.zeros((len(corpus_test[0]), model.vector_size))
 for i in range(len(corpus_test[0])):
     comment = corpus_test[0][i]
     words = comment.split(' ')
+    comment_terms = len(comment)
+    word_set = list(set(words))
+    for term in word_set:
+        if (term != '' and term in voc):
+            if (term not in df_test.keys()):
+                df_test[term] = 0
+            df_test[term] += 1 / len(corpus_test[0])
     repr = np.zeros(model.vector_size)
     for word in words:
-        if (word in voc):
-            repr = repr + model.wv[word]
+        if (word != ''):
+            term_cnt = 0
+            if (word in voc):
+                for term in comment:
+                    if (term == word):
+                        term_cnt += 1
+                tf = term_cnt / comment_terms
+                tf_test[word] = tf
+                repr = repr + model.wv[word]
     NBoW_test[i] = repr/len(words)
+for term in df_test.keys():
+    tfidf_test[term] = tf_test[term] * log(1 / df_test[term])
 
 # Call train and evaluate function for Neural Bag of Words representation
 clf_cntVect = simple_lr_classify(NBoW_train, y_train, NBoW_test, y_test, "NBoW")
@@ -195,9 +219,26 @@ for i in range(len(corpus_train[0])):
     words = comment.split(' ')
     repr = np.zeros(model.vector_size)
     for word in words:
-        if (word in voc):
-            repr = repr + model.wv[word] * tfidf_train[word]
+        if (word != ''):
+            if (word in voc):
+                repr = repr + model.wv[word] * tfidf_train[word]
     NBoW_tfidf_train[i] = repr/len(words)
+
+# Transform using Neural Bag of Words with Tf-iDf representation for train
+NBoW_tfidf_test = np.zeros((len(corpus_test[0]), model.vector_size))
+for i in range(len(corpus_test[0])):
+    comment = corpus_test[0][i]
+    words = comment.split(' ')
+    repr = np.zeros(model.vector_size)
+    for word in words:
+        if (word != ''):
+            if (word in voc):
+                repr = repr + model.wv[word] * tfidf_test[word]
+    NBoW_tfidf_test[i] = repr/len(words)
+
+# Call train and evaluate function for Neural Bag of Words with Tf-iDf representation
+clf_cntVect = simple_lr_classify(NBoW_tfidf_train, y_train, NBoW_tfidf_test, y_test, "NBoW with Tf-iDf")
+
 
 # Load pretrained Google model over all GoogleNews
 google_model = KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True, limit=NUM_W2V_TO_LOAD)
