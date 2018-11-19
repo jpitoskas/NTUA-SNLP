@@ -7,6 +7,8 @@ from gensim.test.utils import common_texts, get_tmpfile
 from gensim.models import Word2Vec, KeyedVectors
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
 from math import *
 import numpy as np
 from random import randint
@@ -65,14 +67,26 @@ def create_corpus(pos, neg):
     return list(corpus[indices]), list(y[indices])
 
 def simple_lr_classify(X_tr, y_tr, X_test, y_test, description):
-    # Helper function to train a logistic classifier and score on test data
-    # min_shape = min(X_test.shape[1], X_tr.shape[1])
+    # Helper function to train a logistic regression classifier and score on test data
     LR = LogisticRegression(solver='liblinear')
     clf_LR = LR.fit(X_tr, y_tr)
-    # clf_LR = clf_LR.fit(X_test, y_test)
     # LR.predict(X_test)
-    print('Test score with', description, ': ', clf_LR.score(X_test, y_test))
+    print('Test score for LR classifier with', description, ':', clf_LR.score(X_test, y_test))
     return clf_LR
+
+def simple_svm_classify(X_tr, y_tr, X_test, y_test, description):
+    # Helper function to train a support vector machine classifier and score on test data
+    SVΜ = SVC(gamma='auto')
+    clf_SVΜ = SVΜ.fit(X_tr, y_tr)
+    print('Test score for SVC classifier with', description, ':', clf_SVΜ.score(X_test, y_test))
+    return clf_SVΜ
+
+def simple_knn_classify(X_tr, y_tr, X_test, y_test, neigh, description):
+    # Helper function to train a k-nearest neighbors classifier and score on test data
+    KNN = KNeighborsClassifier(n_neighbors=neigh)
+    clf_KNN = KNN.fit(X_tr, y_tr)
+    print('Test score for KNN classifier (', neigh, 'neighbors ) with', description, ':', clf_KNN.score(X_test, y_test))
+    return clf_KNN
 
 # Load train sets
 neg_train = read_samples(neg_train_dir, tokenize)
@@ -111,7 +125,7 @@ x_test = BoW_cntVect_test
 y_test = corpus_test[1]
 
 # Call train and evaluate function for Count Vectorizer
-clf_cntVect = simple_lr_classify(x_train, y_train, x_test, y_test, "Count Vectorizer")
+clf_cntVect = simple_lr_classify(x_train, y_train, x_test, y_test, "BoW with Count Vectorizer")
 
 
 # Tf-iDf Vectorizer
@@ -131,13 +145,15 @@ x_train = BoW_TfiDf_train
 x_test = BoW_TfiDf_test
 
 # Call train and evaluate function for Tf-iDf Vectorizer
-clf_TfiDf = simple_lr_classify(x_train, y_train, x_test, y_test, "Tf-iDf")
+clf_TfiDf = simple_lr_classify(x_train, y_train, x_test, y_test, "BoW with Tf-iDf")
 
 
 # Load pretrained w2v model from Pre Lab 01
 # let vocabulary be the one in Step 9
 model = Word2Vec.load('word2vec.model')
 voc = model.wv.index2word
+# get vector size
+dim = model.vector_size
 
 # Find percentage of "Out of Vocabulary" words
 oov_cnt = 0
@@ -152,7 +168,7 @@ df_train = {}
 tfidf_train = {}
 # Transform using Neural Bag of Words representation for train
 # Also find weight for Tf-iDf
-NBoW_train = np.zeros((len(corpus_train[0]), model.vector_size))
+NBoW_train = np.zeros((len(corpus_train[0]), dim))
 for i in range(len(corpus_train[0])):
     comment = corpus_train[0][i]
     words = comment.split(' ')
@@ -163,7 +179,7 @@ for i in range(len(corpus_train[0])):
             if (term not in df_train.keys()):
                 df_train[term] = 0
             df_train[term] += 1 / len(corpus_train[0])
-    repr = np.zeros(model.vector_size)
+    repr = np.zeros(dim)
     for word in words:
         if (word != ''):
             term_cnt = 0
@@ -183,7 +199,7 @@ df_test = {}
 tfidf_test = {}
 # Transform using Neural Bag of Words representation for test
 # Also find weight for Tf-iDf
-NBoW_test = np.zeros((len(corpus_test[0]), model.vector_size))
+NBoW_test = np.zeros((len(corpus_test[0]), dim))
 for i in range(len(corpus_test[0])):
     comment = corpus_test[0][i]
     words = comment.split(' ')
@@ -194,7 +210,7 @@ for i in range(len(corpus_test[0])):
             if (term not in df_test.keys()):
                 df_test[term] = 0
             df_test[term] += 1 / len(corpus_test[0])
-    repr = np.zeros(model.vector_size)
+    repr = np.zeros(dim)
     for word in words:
         if (word != ''):
             term_cnt = 0
@@ -213,11 +229,11 @@ for term in df_test.keys():
 clf_cntVect = simple_lr_classify(NBoW_train, y_train, NBoW_test, y_test, "NBoW")
 
 # Transform using Neural Bag of Words with Tf-iDf representation for train
-NBoW_tfidf_train = np.zeros((len(corpus_train[0]), model.vector_size))
+NBoW_tfidf_train = np.zeros((len(corpus_train[0]), dim))
 for i in range(len(corpus_train[0])):
     comment = corpus_train[0][i]
     words = comment.split(' ')
-    repr = np.zeros(model.vector_size)
+    repr = np.zeros(dim)
     for word in words:
         if (word != ''):
             if (word in voc):
@@ -225,11 +241,11 @@ for i in range(len(corpus_train[0])):
     NBoW_tfidf_train[i] = repr/len(words)
 
 # Transform using Neural Bag of Words with Tf-iDf representation for train
-NBoW_tfidf_test = np.zeros((len(corpus_test[0]), model.vector_size))
+NBoW_tfidf_test = np.zeros((len(corpus_test[0]), dim))
 for i in range(len(corpus_test[0])):
     comment = corpus_test[0][i]
     words = comment.split(' ')
-    repr = np.zeros(model.vector_size)
+    repr = np.zeros(dim)
     for word in words:
         if (word != ''):
             if (word in voc):
@@ -256,3 +272,8 @@ for i in range(10):
     print('Most similar (in text): '+sim[0][0])
     print('Most similar (Google): '+sim_google[0][0])
     print()
+
+# Bonus Step 19
+
+simple_svm_classify(BoW_TfiDf_train, y_train, BoW_TfiDf_test, y_test, 'BoW with Tf-iDf')
+simple_knn_classify(BoW_TfiDf_train, y_train, BoW_TfiDf_test, y_test, 5, 'BoW with Tf-iDf')
