@@ -76,10 +76,10 @@ def simple_lr_classify(X_tr, y_tr, X_test, y_test, description):
 
 def simple_svm_classify(X_tr, y_tr, X_test, y_test, description):
     # Helper function to train a support vector machine classifier and score on test data
-    SVΜ = SVC(gamma='auto')
-    clf_SVΜ = SVΜ.fit(X_tr, y_tr)
-    print('Test score for SVC classifier with', description, ':', clf_SVΜ.score(X_test, y_test))
-    return clf_SVΜ
+    SVM = SVC(gamma='auto')
+    clf_SVM = SVM.fit(X_tr, y_tr)
+    print('Test score for SVC classifier with', description, ':', clf_SVM.score(X_test, y_test))
+    return clf_SVM
 
 def simple_knn_classify(X_tr, y_tr, X_test, y_test, neigh, description):
     # Helper function to train a k-nearest neighbors classifier and score on test data

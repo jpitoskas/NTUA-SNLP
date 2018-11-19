@@ -2,7 +2,7 @@ from collections import defaultdict
 import sys
 import os
 import re
-import subprocess
+# import subprocess
 from math import *
 
 def format_arc(src, dst, src_sym, dst_sym, w):
@@ -67,20 +67,6 @@ def converter(alphabet, w, output):
                     0, 0, src_sym, dst_sym, weight))
     converter.write(str(0)+'\n')
     converter.close()
-
-def testing(words, output):
-    testing = open(output, 'w')
-    for word in words:
-        letters = list(word)
-        s = 0
-        for i in range(len(letters)):
-            testing.write(
-                format_arc(
-                    src=s, dst=s+1, src_sym=letters[i], dst_sym=letters[i], w=0))
-            s += 1
-        testing.write(str(s)+'\n')
-    testing.close()
-
 
 def acceptoras(tokens, weight, output):
     acceptor = open(output, 'w')
@@ -172,12 +158,10 @@ def acceptor_unigram(tokens, dictionary, output):
 #     # p3.wait()
 
 # Find absolute path
-path = os.path.abspath("Around the World in 80 Days, by Jules Verne.txt")
+path = os.path.abspath(sys.argv[1])
 
 res = read_file(path, tokenize)
 
-test = read_file(sys.argv[1], tokenize)
-# print(test)
 # print(len(res))
 
 # Unique words of a list
@@ -196,8 +180,6 @@ syms(alphabet, 'chars.syms')
 converter(alphabet, 1, 'converter.txt')
 
 acceptoras(tokens, 0, 'acceptor.txt')
-
-testing(test, 'test_input.txt')
 
 # dictionary to match each word of the book to its likelihood of occurrence
 word_probability_dict = {}
