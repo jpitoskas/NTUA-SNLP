@@ -104,8 +104,6 @@ corpus_test = create_corpus(pos_test, neg_test)
 
 
 # Count Vectorizer
-
-
 cntVect = CountVectorizer()
 
 # Transform using Count Vectorizer for train

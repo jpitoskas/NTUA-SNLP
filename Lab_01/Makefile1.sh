@@ -14,7 +14,7 @@ fstcompile --isymbols=chars.syms --osymbols=chars.syms acceptor.txt > acceptor.f
 
 # fstclosure acceptor.fst > acceptor_c.fst
 fstrmepsilon acceptor.fst | fstdeterminize | fstminimize > acceptor_opt.fst
-
+fstarcsort acceptor_opt.fst > acceptor_opt_sorted.fst
 # Draw optimal acceptor
 # fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait acceptor_opt.fst | dot -Tjpg > acceptor_opt.jpg
 > prediction.txt
@@ -34,7 +34,7 @@ while read word; do
   # fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait input_conv_sorted.fst | dot -Tjpg > input_conv.jpg
 
   # Compose test with orthograph and sort
-  fstcompose input_conv_sorted.fst acceptor_opt.fst > ortho_input.fst
+  fstcompose input_conv_sorted.fst acceptor_opt_sorted.fst > ortho_input.fst
   fstarcsort ortho_input.fst > ortho_input_sorted.fst
   # fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait ortho_input_sorted.fst | dot -Tjpg > ortho_input_sorted.jpg
   # Draw composed transducer with orthograph and test
