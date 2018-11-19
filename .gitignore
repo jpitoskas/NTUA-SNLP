@@ -7,6 +7,7 @@
 !evaluation_set8.txt
 !prediction_world_level.txt
 !prediction_unigram.txt
+!prediction_20rnd.txt
 *.tar
 *.gz
 /Lab_01/aclImdb

@@ -27,7 +27,7 @@ neg_test_dir = os.path.join(test_dir, 'neg')
 
 # For memory limitations. These parameters fit in 8GB of RAM. (5000)
 # If you have 16G of RAM you can experiment with the full dataset / W2V
-MAX_NUM_SAMPLES = 5000
+MAX_NUM_SAMPLES = 100
 # Load first 1M word embeddings. This works because GoogleNews are roughly
 # sorted from most frequent to least frequent.
 # It may yield much worse results for other embeddings corpora

@@ -1,6 +1,7 @@
 import sys
 import os
 import re
+from random import randint
 
 def identity_preprocess(string):
     return string
@@ -35,7 +36,16 @@ def create_test_file(words, output):
         testing.write(word+'\n')
     testing.close()
 
+# Pick 20 random words for evaluation
+def random_test_file(words, output):
+    testing = open(output, 'w')
+    for _ in range(20):
+        rnd = randint(0, len(words))
+        testing.write(words[rnd]+'\n')
+    testing.close()
+
 test = read_test(sys.argv[1], tokenize)
 # print(test)
 
 create_test_file(test, 'test_set.txt')
+random_test_file(test, 'random_test_set_20.txt')

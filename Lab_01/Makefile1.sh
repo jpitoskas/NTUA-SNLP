@@ -50,7 +50,9 @@ while read word; do
   cut -f4 min_dist.txt |
   grep -v "<epsilon>" |
   head -n -1 |
-  tr -d '\n' >> prediction.txt
-  printf '\n' >> prediction.txt
+  tr -d '\n' >> prediction_20rnd.txt
+  printf '\n' >> prediction_20rnd.txt
 
-done < "test_set.txt"
+done < "random_test_set_20.txt"
+
+python3 evaluate_test_set.py evaluation_set8.txt random_test_set_20.txt prediction_20rnd.txt
