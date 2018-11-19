@@ -17,11 +17,11 @@ fstrmepsilon acceptor.fst | fstdeterminize | fstminimize > acceptor_opt.fst
 fstarcsort acceptor_opt.fst > acceptor_opt_sorted.fst
 # Draw optimal acceptor
 # fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait acceptor_opt.fst | dot -Tjpg > acceptor_opt.jpg
-> prediction.txt
+> prediction_20rnd.txt
 
 while read word; do
   # Use spell checker to predict every word in the test set
-  python3 evaluate_test_set.py "$word"
+  python3 predict_test_set.py "$word"
 
   # Create testing FSTs
   fstcompile --isymbols=chars.syms --osymbols=chars.syms test_input.txt > input.fst
@@ -55,4 +55,4 @@ while read word; do
 
 done < "random_test_set_20.txt"
 
-python3 evaluate_test_set.py evaluation_set8.txt random_test_set_20.txt prediction_20rnd.txt
+python3 evaluate_test_set.py "evaluation_set8.txt" "random_test_set_20.txt" "prediction_20rnd.txt"

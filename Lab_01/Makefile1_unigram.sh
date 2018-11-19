@@ -21,7 +21,7 @@ fstarcsort acceptor_opt.fst > acceptor_opt_sorted.fst
 
 while read word; do
   # Use spell checker to predict every word in the test set
-  python3 evaluate_test_set.py "$word"
+  python3 predict_test_set.py "$word"
 
   # Create testing FSTs
   fstcompile --isymbols=chars.syms --osymbols=chars.syms test_input.txt > input.fst
@@ -54,3 +54,5 @@ while read word; do
   printf '\n' >> prediction_unigram.txt
 
 done < "test_set.txt"
+
+python3 evaluate_test_set.py "evaluation_set8.txt" "test_set.txt" "prediction_unigram.txt"
