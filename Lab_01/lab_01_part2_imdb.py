@@ -27,7 +27,7 @@ neg_test_dir = os.path.join(test_dir, 'neg')
 
 # For memory limitations. These parameters fit in 8GB of RAM. (5000)
 # If you have 16G of RAM you can experiment with the full dataset / W2V
-MAX_NUM_SAMPLES = 100
+MAX_NUM_SAMPLES = 25000
 # Load first 1M word embeddings. This works because GoogleNews are roughly
 # sorted from most frequent to least frequent.
 # It may yield much worse results for other embeddings corpora
@@ -161,9 +161,8 @@ for word in voc_test:
 oov = 100 * oov_cnt / len(voc_test)
 print('Percentage of OOV words: ' + str(oov) + ' %')
 
-tf_train = {}
+
 df_train = {}
-tfidf_train = {}
 # Transform using Neural Bag of Words representation for train
 # Also find weight for Tf-iDf
 NBoW_train = np.zeros((len(corpus_train[0]), dim))
@@ -180,21 +179,12 @@ for i in range(len(corpus_train[0])):
     repr = np.zeros(dim)
     for word in words:
         if (word != ''):
-            term_cnt = 0
             if (word in voc):
-                for term in comment:
-                    if (term == word):
-                        term_cnt += 1
-                tf = term_cnt / comment_terms
-                tf_train[word] = tf
                 repr = repr + model.wv[word]
     NBoW_train[i] = repr/len(words)
-for term in df_train.keys():
-    tfidf_train[term] = tf_train[term] * log(1 / df_train[term])
 
-tf_test = {}
+
 df_test = {}
-tfidf_test = {}
 # Transform using Neural Bag of Words representation for test
 # Also find weight for Tf-iDf
 NBoW_test = np.zeros((len(corpus_test[0]), dim))
@@ -211,17 +201,9 @@ for i in range(len(corpus_test[0])):
     repr = np.zeros(dim)
     for word in words:
         if (word != ''):
-            term_cnt = 0
             if (word in voc):
-                for term in comment:
-                    if (term == word):
-                        term_cnt += 1
-                tf = term_cnt / comment_terms
-                tf_test[word] = tf
                 repr = repr + model.wv[word]
     NBoW_test[i] = repr/len(words)
-for term in df_test.keys():
-    tfidf_test[term] = tf_test[term] * log(1 / df_test[term])
 
 # Call train and evaluate function for Neural Bag of Words representation
 clf_cntVect = simple_lr_classify(NBoW_train, y_train, NBoW_test, y_test, "NBoW")
@@ -230,48 +212,60 @@ clf_cntVect = simple_lr_classify(NBoW_train, y_train, NBoW_test, y_test, "NBoW")
 NBoW_tfidf_train = np.zeros((len(corpus_train[0]), dim))
 for i in range(len(corpus_train[0])):
     comment = corpus_train[0][i]
+    comment_terms = len(comment)
     words = comment.split(' ')
     repr = np.zeros(dim)
     for word in words:
         if (word != ''):
+            term_cnt = 0
             if (word in voc):
-                repr = repr + model.wv[word] * tfidf_train[word]
+                for term in comment:
+                    if (term == word):
+                        term_cnt += 1
+                tf_train = term_cnt / comment_terms
+                repr = repr + model.wv[word] * (tf_train * log(1 / df_train[word]))
     NBoW_tfidf_train[i] = repr/len(words)
 
 # Transform using Neural Bag of Words with Tf-iDf representation for train
 NBoW_tfidf_test = np.zeros((len(corpus_test[0]), dim))
 for i in range(len(corpus_test[0])):
     comment = corpus_test[0][i]
+    comment_terms = len(comment)
     words = comment.split(' ')
     repr = np.zeros(dim)
     for word in words:
         if (word != ''):
+            term_cnt = 0
             if (word in voc):
-                repr = repr + model.wv[word] * tfidf_test[word]
+                for term in comment:
+                    if (term == word):
+                        term_cnt += 1
+                tf_test = term_cnt / comment_terms
+                repr = repr + model.wv[word] * (tf_test * log(1 / df_test[word]))
     NBoW_tfidf_test[i] = repr/len(words)
 
 # Call train and evaluate function for Neural Bag of Words with Tf-iDf representation
 clf_cntVect = simple_lr_classify(NBoW_tfidf_train, y_train, NBoW_tfidf_test, y_test, "NBoW with Tf-iDf")
 
 
-# Load pretrained Google model over all GoogleNews
-google_model = KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True, limit=NUM_W2V_TO_LOAD)
-google_voc = google_model.wv.index2word
-
-# For 10 random words in vocabulary
-for i in range(10):
-    rnd = randint(0, len(voc))
-    while (not(voc[rnd] in google_voc)):
-        rnd = randint(0, len(voc))
-    # get most similar word
-    sim = model.wv.most_similar(voc[rnd])
-    sim_google = google_model.wv.most_similar(voc[rnd])
-    print('For word: '+voc[rnd])
-    print('Most similar (in text): '+sim[0][0])
-    print('Most similar (Google): '+sim_google[0][0])
-    print()
-
-# Bonus Step 19
-
-simple_svm_classify(BoW_TfiDf_train, y_train, BoW_TfiDf_test, y_test, 'BoW with Tf-iDf')
-simple_knn_classify(BoW_TfiDf_train, y_train, BoW_TfiDf_test, y_test, 5, 'BoW with Tf-iDf')
+# # Load pretrained Google model over all GoogleNews
+# google_model = KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True, limit=NUM_W2V_TO_LOAD)
+# google_voc = google_model.wv.index2word
+#
+# # For 10 random words in vocabulary
+# for i in range(10):
+#     rnd = randint(0, len(voc))
+#     while (not(voc[rnd] in google_voc)):
+#         rnd = randint(0, len(voc))
+#     # get most similar word
+#     sim = model.wv.most_similar(voc[rnd])
+#     sim_google = google_model.wv.most_similar(voc[rnd])
+#     print('For word: '+voc[rnd])
+#     print('Most similar (in text): '+sim[0][0])
+#     print('Most similar (Google): '+sim_google[0][0])
+#     print()
+#
+# # Bonus Step 19
+#
+# simple_svm_classify(BoW_TfiDf_train, y_train, BoW_TfiDf_test, y_test, 'BoW with Tf-iDf')
+# simple_knn_classify(BoW_TfiDf_train, y_train, BoW_TfiDf_test, y_test, 5, 'BoW with Tf-iDf')
