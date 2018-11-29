@@ -12,6 +12,7 @@
 *.gz
 /Lab_01/aclImdb
 /Pre_Lab_01/openfst-1.6.1
+/Pre_Lab_02/kaldi-master
 *.bin
 *.doc
 *.docx
