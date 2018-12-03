@@ -14,8 +14,14 @@ m1_dir = os.path.join(wavs_dir, 'm1')
 m3_dir = os.path.join(wavs_dir, 'm3')
 transcription_dir = os.path.join(data_dir, 'transcription.txt')
 test_dir = os.path.abspath('./kaldi-master/egs/usc/data/test/')
+if not os.path.exists(test_dir):
+    os.makedirs(test_dir)
 train_dir = os.path.abspath('./kaldi-master/egs/usc/data/train/')
+if not os.path.exists(train_dir):
+    os.makedirs(train_dir)
 dev_dir = os.path.abspath('./kaldi-master/egs/usc/data/dev/')
+if not os.path.exists(dev_dir):
+    os.makedirs(dev_dir)
 
 def create_files(src, dest):
     trans = open(transcription_dir, 'r')
