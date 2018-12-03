@@ -58,6 +58,6 @@ def create_files(src, dest):
     wavscp.close()
     text.close()
 
-# create_files(uttrain_dir, train_dir)
+create_files(uttrain_dir, train_dir)
 create_files(uttest_dir, test_dir)
-# create_files(utvalid_dir, dev_dir)
+create_files(utvalid_dir, dev_dir)
