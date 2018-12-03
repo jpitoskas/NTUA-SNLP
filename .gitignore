@@ -13,8 +13,9 @@
 /Lab_01/aclImdb
 /Pre_Lab_01/openfst-1.6.1
 /Pre_Lab_02/kaldi-master
-!/Pre_Lab_02/kaldi-master/egs/usc
+!/Pre_Lab_02/kaldi-master/egs/usc/
 /Pre_Lab_02/slp_lab2_data
+/Pre_Lab_02/lab2_help_scripts
 *.bin
 *.doc
 *.docx
