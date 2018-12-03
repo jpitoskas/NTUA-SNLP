@@ -23,6 +23,8 @@ dev_dir = os.path.abspath('./kaldi-master/egs/usc/data/dev/')
 if not os.path.exists(dev_dir):
     os.makedirs(dev_dir)
 
+# MPAAA
+
 def create_files(src, dest):
     trans = open(transcription_dir, 'r')
     sentences = trans.readlines()
