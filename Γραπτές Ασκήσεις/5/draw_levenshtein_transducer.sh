@@ -25,7 +25,7 @@ fstarcsort acceptor_opt.fst > acceptor_opt_sorted.fst
 
   # Compose test with orthograph and sort
   fstcompose input_conv_sorted.fst acceptor_opt_sorted.fst > ortho_input.fst
-  # fstarcsort ortho_input.fst > ortho_input_sorted.fst
+  fstarcsort ortho_input.fst > ortho_input_sorted.fst
   fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait ortho_input_sorted.fst | dot -Tjpg > ortho_input.jpg
   # Draw composed transducer with orthograph and test
   # fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait ortho_input_sorted.fst | dot -Tjpg > ortho_input.jpg
