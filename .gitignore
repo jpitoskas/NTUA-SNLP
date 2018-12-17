@@ -1,6 +1,10 @@
 *.zip
 *.fst
 *.syms
+*.cnts
+*.far
+*.ARPA
+*.mod
 *.jpg
 *.txt
 !The Adventures of Sherlock Holmes, by Arthur Conan Doyle.txt
