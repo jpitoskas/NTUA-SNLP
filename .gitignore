@@ -1,5 +1,6 @@
 *.zip
 *.fst
+*.syms
 *.jpg
 *.txt
 !The Adventures of Sherlock Holmes, by Arthur Conan Doyle.txt
@@ -16,6 +17,7 @@
 /Lab_02/slp_lab2_data
 /Lab_02/lab2_help_scripts
 /opengrm-ngram-1.3.4
+/openfst-1.6.9
 *.bin
 *.doc
 *.docx
