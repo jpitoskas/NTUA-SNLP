@@ -7,7 +7,7 @@ fstcompile --isymbols=chars.syms --osymbols=chars.syms levenshtein_transducer.tx
 # fstrmepsilon levenshtein_transducer_first.fst | fstdeterminize | fstminimize | fstarcsort > levenshtein_transducer.fst
 
 # Draw Levenshtein Transducer
-fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait levenshtein_transducer.fst | dot -Gdpi=400 -Tjpg > levenshtein_transducer.jpg
+fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait levenshtein_transducer.fst | dot -Gdpi=1000 -Tjpg > levenshtein_transducer.jpg
 
 # Create FSA
 fstcompile --isymbols=chars.syms --osymbols=chars.syms acceptor.txt > acceptor.fst
@@ -39,7 +39,7 @@ fstshortestpath ortho_input_sorted.fst > min_dist.fst
 fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait min_dist.fst | dot -Gdpi=400 -Tjpg > min_dist.jpg
 
 # Find minimum distance
-fstshortestpath -nshortest=5 ortho_input_sorted.fst > second_min_dist_f.fst
+fstshortestpath -nshortest=6 ortho_input_sorted.fst > second_min_dist_f.fst
 fstrmepsilon second_min_dist_f.fst > second_min_dist.fst
 
 # Draw/Print minimum distance transducer
