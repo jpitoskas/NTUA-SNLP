@@ -7,7 +7,7 @@ fstcompile --isymbols=chars.syms --osymbols=chars.syms levenshtein_transducer.tx
 # fstrmepsilon levenshtein_transducer_first.fst | fstdeterminize | fstminimize | fstarcsort > levenshtein_transducer.fst
 
 # Draw Levenshtein Transducer
-fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait levenshtein_transducer.fst | dot -Gdpi=400 -Tjpg > levenshtein_transducer.jpg
+fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait levenshtein_transducer.fst | dot -Gdpi=1000 -Tjpg > levenshtein_transducer.jpg
 
 # Create FSA
 fstcompile --isymbols=chars.syms --osymbols=chars.syms acceptor.txt > acceptor.fst
