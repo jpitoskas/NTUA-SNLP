@@ -39,7 +39,7 @@ fstshortestpath ortho_input_sorted.fst > min_dist.fst
 fstdraw --isymbols=chars.syms --osymbols=chars.syms -portrait min_dist.fst | dot -Gdpi=400 -Tjpg > min_dist.jpg
 
 # Find minimum distance
-fstshortestpath -nshortest=5 ortho_input_sorted.fst > second_min_dist_f.fst
+fstshortestpath -nshortest=6 ortho_input_sorted.fst > second_min_dist_f.fst
 fstrmepsilon second_min_dist_f.fst > second_min_dist.fst
 
 # Draw/Print minimum distance transducer
