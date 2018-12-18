@@ -5,6 +5,11 @@ import re
 # import subprocess
 from math import *
 
+def create_txt(output, words):
+    inp = open(output, "w")
+    for content in words:
+        inp.write(content+"\n")
+    inp.close()
 
 L = ["lovely", "grand", "mother", "grandmother"]
 book =  [3 * "lovely mother grand grandmother lovely grandmother grand mother " +
@@ -15,29 +20,30 @@ book =  [3 * "lovely mother grand grandmother lovely grandmother grand mother " 
         "mother grandmother mother",
         1 * "lovely grand lovely"]
 
-lex = open("lexicon.txt", "w")
-for word in L:
-    lex.write(word+"\n")
-lex.close()
-
-sent = open("sentences.txt", "w")
-for sentence in book:
-    sent.write(sentence+"\n")
-sent.close()
-
 # print(book)
 
-# # dictionary to match each pair of adjacent chars of the book to its likelihood of occurrence
-# pairs = []
-# for i in range(len(book)):
-#     for j in range(len(book[i]) - 1):
-#         char_pair = str(book[i][j]) + str(book[i][j+1])
-#         pairs.append(char_pair)
-#
-# # Unique pairs of chars of a list
-# unique_pairs = list(set(pairs))
-#
-# pair_probability_dict = {}
-# pair_probability_dict = defaultdict(lambda:0, pair_probability_dict)
-# for i in range(len(pairs)):
-#     pair_probability_dict[pairs[i]] = pair_probability_dict[pairs[i]] + 1/len(pairs)
+create_txt("lexicon.txt", L)
+create_txt("sentences.txt", book)
+
+# Create inputs of "lovelygrandmothergrand" based on L
+input1 = "lovely grand mother grand".split(" ")
+input2 = "lovely grandmother grand".split(" ")
+
+print(input1)
+
+def format_arc(src, dst, src_sym, dst_sym, w):
+    return (str(src)+' '+str(dst)+' '+str(src_sym)+' '+str(dst_sym)+' '+str(w)+'\n')
+
+def create_txt_fst(words, output):
+    txt = open(output, 'w')
+    s = 0
+    for word in words:
+        txt.write(
+            format_arc(
+                src=s, dst=s+1, src_sym=word, dst_sym=word, w=0))
+        s += 1
+    txt.write(str(s)+'\n')
+    txt.close()
+
+create_txt_fst(input1, 'input1.txt')
+create_txt_fst(input2, 'input2.txt')
