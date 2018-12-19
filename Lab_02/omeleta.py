@@ -46,9 +46,6 @@ def create_files(src, dest):
             line = line.split('_')
             speaker = line[2]
             id = line[3]
-            # print(speaker)
-            # print(id)
-
             utt_id = "utterance_id_"+str(cnt)
             uttids.write(utt_id+"\n")
             utt2spk.write(utt_id+" "+str(speaker)+"\n")
