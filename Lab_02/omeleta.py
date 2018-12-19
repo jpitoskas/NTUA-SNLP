@@ -1,6 +1,7 @@
 import sys
 import os
 import re
+from collections import defaultdict
 
 data_dir = os.path.abspath('./slp_lab2_data/')
 filesets_dir = os.path.join(data_dir, 'filesets/')
@@ -13,6 +14,7 @@ f5_dir = os.path.join(wavs_dir, 'f5')
 m1_dir = os.path.join(wavs_dir, 'm1')
 m3_dir = os.path.join(wavs_dir, 'm3')
 transcription_dir = os.path.join(data_dir, 'transcription.txt')
+lexicon_dir = os.path.join(data_dir, 'lexicon.txt')
 test_dir = os.path.abspath('./kaldi-master/egs/usc/data/test/')
 if not os.path.exists(test_dir):
     os.makedirs(test_dir)
@@ -24,6 +26,23 @@ if not os.path.exists(dev_dir):
     os.makedirs(dev_dir)
 
 # MPAAA
+
+def load_phonemes():
+    phonemes = {}
+    phonemes = defaultdict(lambda:"", phonemes)
+    with open(lexicon_dir, 'r') as f:
+        line = f.readline()
+        while line:
+            line = line.replace('\n','')
+            line = line.split("\t ")
+            if (line[0] == "<oov>  <oov>"):
+                line[0] = "<oov>"
+                line.append("<oov>")
+            # print(line[1])
+            phonemes[line[0].lower()] = line[1]
+            line = f.readline()
+    print(len(phonemes))
+
 
 def create_files(src, dest):
     trans = open(transcription_dir, 'r')
@@ -63,6 +82,7 @@ def create_files(src, dest):
     wavscp.close()
     text.close()
 
-create_files(uttrain_dir, train_dir)
-create_files(uttest_dir, test_dir)
-create_files(utvalid_dir, dev_dir)
+phonemes = load_phonemes()
+# create_files(uttrain_dir, train_dir)
+# create_files(uttest_dir, test_dir)
+# create_files(utvalid_dir, dev_dir)
