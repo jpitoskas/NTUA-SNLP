@@ -27,18 +27,26 @@ if not os.path.exists(dev_dir):
 
 # MPAAA
 
+def tokenize(s):
+    s = s.strip()
+    s = s.lower()
+    # Keep lower/upper case characters, numbers
+    regex = re.compile("[^a-z']")
+    s = regex.sub(' ', s)
+    s = s.replace('\n',' ')
+    s = re.sub(' +',' ', s)
+    s = s.split(' ')
+    return s
+
+phonemes = {}
+phonemes = defaultdict(lambda:"", phonemes)
 def load_phonemes():
-    phonemes = {}
-    phonemes = defaultdict(lambda:"", phonemes)
     with open(lexicon_dir, 'r') as f:
         line = f.readline()
         while line:
             line = line.replace('\n','')
-            line = line.split("\t ")
-            if (line[0] == "<oov>  <oov>"):
-                line[0] = "<oov>"
-                line.append("<oov>")
-            # print(line[1])
+            line = line.replace("\t", " ")
+            line = line.split("  ")
             phonemes[line[0].lower()] = line[1]
             line = f.readline()
     print(len(phonemes))
@@ -71,18 +79,22 @@ def create_files(src, dest):
             wavdir = os.path.join(wavs_dir, speaker)
             wavdir += "/usctimit_ema_"+str(speaker)+"_"+str(id)+".wav"
             wavscp.write(utt_id+" "+wavdir+"\n")
-            text.write(utt_id+" "+sentences[int(id) - 1])
+            sentence = tokenize(sentences[int(id) - 1])
+            phone_sent = ""
+            for word in sentence:
+                if (word != ""):
+                    phone_sent += phonemes[word] + " "
+            text.write(utt_id+" "+"sil "+phone_sent+"sil\n")
 
             line = f.readline()
             cnt += 1
-
     trans.close()
     uttids.close()
     utt2spk.close()
     wavscp.close()
     text.close()
 
-phonemes = load_phonemes()
-# create_files(uttrain_dir, train_dir)
-# create_files(uttest_dir, test_dir)
-# create_files(utvalid_dir, dev_dir)
+load_phonemes()
+create_files(uttrain_dir, train_dir)
+create_files(uttest_dir, test_dir)
+create_files(utvalid_dir, dev_dir)
