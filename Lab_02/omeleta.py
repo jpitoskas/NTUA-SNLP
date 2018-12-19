@@ -1,6 +1,7 @@
 import sys
 import os
 import re
+from collections import defaultdict
 
 data_dir = os.path.abspath('./slp_lab2_data/')
 filesets_dir = os.path.join(data_dir, 'filesets/')
@@ -13,6 +14,7 @@ f5_dir = os.path.join(wavs_dir, 'f5')
 m1_dir = os.path.join(wavs_dir, 'm1')
 m3_dir = os.path.join(wavs_dir, 'm3')
 transcription_dir = os.path.join(data_dir, 'transcription.txt')
+lexicon_dir = os.path.join(data_dir, 'lexicon.txt')
 test_dir = os.path.abspath('./kaldi-master/egs/usc/data/test/')
 if not os.path.exists(test_dir):
     os.makedirs(test_dir)
@@ -24,6 +26,31 @@ if not os.path.exists(dev_dir):
     os.makedirs(dev_dir)
 
 # MPAAA
+
+def tokenize(s):
+    s = s.strip()
+    s = s.lower()
+    # Keep lower/upper case characters, numbers
+    regex = re.compile("[^a-z']")
+    s = regex.sub(' ', s)
+    s = s.replace('\n',' ')
+    s = re.sub(' +',' ', s)
+    s = s.split(' ')
+    return s
+
+phonemes = {}
+phonemes = defaultdict(lambda:"", phonemes)
+def load_phonemes():
+    with open(lexicon_dir, 'r') as f:
+        line = f.readline()
+        while line:
+            line = line.replace('\n','')
+            line = line.replace("\t", " ")
+            line = line.split("  ")
+            phonemes[line[0].lower()] = line[1]
+            line = f.readline()
+    print(len(phonemes))
+
 
 def create_files(src, dest):
     trans = open(transcription_dir, 'r')
@@ -46,26 +73,28 @@ def create_files(src, dest):
             line = line.split('_')
             speaker = line[2]
             id = line[3]
-            # print(speaker)
-            # print(id)
-
             utt_id = "utterance_id_"+str(cnt)
             uttids.write(utt_id+"\n")
             utt2spk.write(utt_id+" "+str(speaker)+"\n")
             wavdir = os.path.join(wavs_dir, speaker)
             wavdir += "/usctimit_ema_"+str(speaker)+"_"+str(id)+".wav"
             wavscp.write(utt_id+" "+wavdir+"\n")
-            text.write(utt_id+" "+sentences[int(id) - 1])
+            sentence = tokenize(sentences[int(id) - 1])
+            phone_sent = ""
+            for word in sentence:
+                if (word != ""):
+                    phone_sent += phonemes[word] + " "
+            text.write(utt_id+" "+"sil "+phone_sent+"sil\n")
 
             line = f.readline()
             cnt += 1
-
     trans.close()
     uttids.close()
     utt2spk.close()
     wavscp.close()
     text.close()
 
+load_phonemes()
 create_files(uttrain_dir, train_dir)
 create_files(uttest_dir, test_dir)
 create_files(utvalid_dir, dev_dir)
