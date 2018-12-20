@@ -3,6 +3,7 @@ import os
 import re
 from collections import defaultdict
 
+# Create directories
 data_dir = os.path.abspath('./slp_lab2_data/')
 filesets_dir = os.path.join(data_dir, 'filesets/')
 uttest_dir = os.path.join(filesets_dir, 'test_utterances.txt')
@@ -24,8 +25,35 @@ if not os.path.exists(train_dir):
 dev_dir = os.path.abspath('./kaldi-master/egs/usc/data/dev/')
 if not os.path.exists(dev_dir):
     os.makedirs(dev_dir)
+usc_dir = os.path.abspath('./kaldi-master/egs/usc/')
+local_dir = os.path.join(usc_dir, 'local/')
+if not os.path.exists(local_dir):
+    os.makedirs(local_dir)
+conf_dir = os.path.join(usc_dir, 'conf/')
+if not os.path.exists(conf_dir):
+    os.makedirs(conf_dir)
+lang_dir = os.path.join(usc_dir, 'data/lang/')
+if not os.path.exists(lang_dir):
+    os.makedirs(lang_dir)
+dict_dir = os.path.join(usc_dir, 'data/local/dict/')
+if not os.path.exists(dict_dir):
+    os.makedirs(dict_dir)
+lm_tmp_dir = os.path.join(usc_dir, 'data/local/lm_tmp/')
+if not os.path.exists(lm_tmp_dir):
+    os.makedirs(lm_tmp_dir)
+nist_lm_dir = os.path.join(usc_dir, 'data/local/nist_lm/')
+if not os.path.exists(nist_lm_dir):
+    os.makedirs(nist_lm_dir)
+
 
 # MPAAA
+
+def create_txt(path, name, words):
+    txt_dir = os.path.join(path, name)
+    txt = open(txt_dir, "w")
+    for content in words:
+        txt.write(content+"\n")
+    txt.close()
 
 def tokenize(s):
     s = s.strip()
@@ -33,14 +61,14 @@ def tokenize(s):
     # Keep lower/upper case characters, numbers
     regex = re.compile("[^a-z']")
     s = regex.sub(' ', s)
-    s = s.replace('\n',' ')
+    s = s.replace('\n','')
     s = re.sub(' +',' ', s)
     s = s.split(' ')
     return s
 
-phonemes = {}
-phonemes = defaultdict(lambda:"", phonemes)
 def load_phonemes():
+    phonemes = {}
+    phonemes = defaultdict(lambda:"", phonemes)
     with open(lexicon_dir, 'r') as f:
         line = f.readline()
         while line:
@@ -50,6 +78,7 @@ def load_phonemes():
             phonemes[line[0].lower()] = line[1]
             line = f.readline()
     print(len(phonemes))
+    return phonemes
 
 
 def create_files(src, dest):
@@ -94,7 +123,11 @@ def create_files(src, dest):
     wavscp.close()
     text.close()
 
-load_phonemes()
+# main
+
+phonemes = load_phonemes()
 create_files(uttrain_dir, train_dir)
 create_files(uttest_dir, test_dir)
 create_files(utvalid_dir, dev_dir)
+create_txt(dict_dir, "silence_phones.txt", ["sil"])
+create_txt(dict_dir, "optional_silence.txt", ["sil"])
