@@ -75,6 +75,9 @@ def load_phonemes():
             line = line.replace('\n','')
             line = line.replace("\t", " ")
             line = line.split("  ")
+            if (line[0] == "<oov> <oov>"):
+                line[0] = "<oov>"
+                line.append("<oov>")
             phonemes[line[0].lower()] = line[1]
             line = f.readline()
     print(len(phonemes))
