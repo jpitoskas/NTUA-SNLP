@@ -1,5 +1,6 @@
 import sys
 import os
+import errno
 import re
 from collections import defaultdict
 
@@ -29,6 +30,36 @@ usc_dir = os.path.abspath('./kaldi-master/egs/usc/')
 local_dir = os.path.join(usc_dir, 'local/')
 if not os.path.exists(local_dir):
     os.makedirs(local_dir)
+local_score_kaldi_dir = os.path.join(local_dir, 'score_kaldi.sh')
+score_kaldi_dir = os.path.abspath('.kaldi-master/egs/wsj/s5/steps/score_kaldi.sh')
+try:
+    os.symlink(score_kaldi_dir, local_score_kaldi_dir)
+except OSError as e:
+    if e.errno == errno.EEXIST:
+        os.remove(local_score_kaldi_dir)
+        os.symlink(score_kaldi_dir, local_score_kaldi_dir)
+    else:
+        raise e
+usc_steps_dir = os.path.join(usc_dir, 'steps')
+steps_dir = os.path.abspath('.kaldi-master/egs/wsj/s5/steps')
+try:
+    os.symlink(steps_dir, usc_steps_dir)
+except OSError as e:
+    if e.errno == errno.EEXIST:
+        os.remove(usc_steps_dir)
+        os.symlink(steps_dir, usc_steps_dir)
+    else:
+        raise e
+usc_utils_dir = os.path.join(usc_dir, 'utils')
+utils_dir = os.path.abspath('.kaldi-master/egs/wsj/s5/utils')
+try:
+    os.symlink(utils_dir, usc_utils_dir)
+except OSError as e:
+    if e.errno == errno.EEXIST:
+        os.remove(usc_utils_dir)
+        os.symlink(utils_dir, usc_utils_dir)
+    else:
+        raise e
 conf_dir = os.path.join(usc_dir, 'conf/')
 if not os.path.exists(conf_dir):
     os.makedirs(conf_dir)
@@ -48,12 +79,26 @@ if not os.path.exists(nist_lm_dir):
 
 # MPAAA
 
-def create_txt(path, name, words):
-    txt_dir = os.path.join(path, name)
-    txt = open(txt_dir, "w")
+def create_dict(path, words):
+    non_sil_dir = os.path.join(path, "nonsilence_phones.txt")
+    lex_dir = os.path.join(path, "lexicon.txt")
+    sil_dir = os.path.join(path, "silence_phones.txt")
+    opt_sil_dir = os.path.join(path, "optional_silence.txt")
+    non_sil = open(non_sil_dir, "w")
+    lex = open(lex_dir, "w")
+    sil = open(sil_dir, "w")
+    opt_sil = open(opt_sil_dir, "w")
     for content in words:
-        txt.write(content+"\n")
-    txt.close()
+        lex.write(content+" "+content+"\n")
+        if (content == "sil"):
+            sil.write(content+"\n")
+            opt_sil.write(content+"\n")
+        else:
+            non_sil.write(content+"\n")
+    non_sil.close()
+    lex.close()
+    sil.close()
+    opt_sil.close()
 
 def tokenize(s):
     s = s.strip()
@@ -69,6 +114,7 @@ def tokenize(s):
 def load_phonemes():
     phonemes = {}
     phonemes = defaultdict(lambda:"", phonemes)
+    all_phonemes = []
     with open(lexicon_dir, 'r') as f:
         line = f.readline()
         while line:
@@ -78,10 +124,13 @@ def load_phonemes():
             if (line[0] == "<oov> <oov>"):
                 line[0] = "<oov>"
                 line.append("<oov>")
+            all_phonemes += line[1].split(" ")
             phonemes[line[0].lower()] = line[1]
             line = f.readline()
+    unique_phonemes = list(set(all_phonemes))
+    unique_phonemes = sorted(unique_phonemes)
     print(len(phonemes))
-    return phonemes
+    return phonemes, unique_phonemes
 
 
 def create_files(src, dest):
@@ -128,9 +177,8 @@ def create_files(src, dest):
 
 # main
 
-phonemes = load_phonemes()
+phonemes, unique_phonemes = load_phonemes()
 create_files(uttrain_dir, train_dir)
 create_files(uttest_dir, test_dir)
 create_files(utvalid_dir, dev_dir)
-create_txt(dict_dir, "silence_phones.txt", ["sil"])
-create_txt(dict_dir, "optional_silence.txt", ["sil"])
+create_dict(dict_dir, unique_phonemes)
