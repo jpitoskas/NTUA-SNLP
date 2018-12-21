@@ -79,15 +79,42 @@ if not os.path.exists(nist_lm_dir):
 
 # MPAAA
 
+def create_lm_filename(filename):
+    read_dir = usc_dir + "/data/" + filename
+    write_dir = dict_dir
+    write_filename = "lm_" + filename + ".text"
+    read = os.path.join(read_dir, "text.txt")
+    write = os.path.join(write_dir, write_filename)
+    write_fd = open(write, 'w')
+    with open(read, 'r') as read_fd:
+        line = read_fd.readline()
+        while line:
+            text = line.replace('\n','</s>\n')
+            text = text.split(' ')
+            text[1] = "<s>" + text[1]
+            text = " ".join(text)
+            write_fd.write(text)
+            line = read_fd.readline()
+    read_fd.close()
+    write_fd.close()
+
+
+
+
+
+
+
 def create_dict(path, words):
     non_sil_dir = os.path.join(path, "nonsilence_phones.txt")
     lex_dir = os.path.join(path, "lexicon.txt")
     sil_dir = os.path.join(path, "silence_phones.txt")
     opt_sil_dir = os.path.join(path, "optional_silence.txt")
+    extra_q = os.path.join(path, "extra_questions.txt")
     non_sil = open(non_sil_dir, "w")
     lex = open(lex_dir, "w")
     sil = open(sil_dir, "w")
     opt_sil = open(opt_sil_dir, "w")
+    extraq = open(extra_q, "w")
     for content in words:
         lex.write(content+" "+content+"\n")
         if (content == "sil"):
@@ -95,10 +122,15 @@ def create_dict(path, words):
             opt_sil.write(content+"\n")
         else:
             non_sil.write(content+"\n")
+    create_lm_filename("dev")
+    create_lm_filename("train")
+    create_lm_filename("test")
+
     non_sil.close()
     lex.close()
     sil.close()
     opt_sil.close()
+    extraq.close()
 
 def tokenize(s):
     s = s.strip()
@@ -129,7 +161,6 @@ def load_phonemes():
             line = f.readline()
     unique_phonemes = list(set(all_phonemes))
     unique_phonemes = sorted(unique_phonemes)
-    print(len(phonemes))
     return phonemes, unique_phonemes
 
 
