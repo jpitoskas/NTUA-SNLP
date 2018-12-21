@@ -98,12 +98,6 @@ def create_lm_filename(filename):
     read_fd.close()
     write_fd.close()
 
-
-
-
-
-
-
 def create_dict(path, words):
     non_sil_dir = os.path.join(path, "nonsilence_phones.txt")
     lex_dir = os.path.join(path, "lexicon.txt")
