@@ -11,4 +11,4 @@ compile-lm ./kaldi-master/egs/usc/data/local/lm_tmp/built_lm_bigram.ilm.gz -t=ye
 
 cd ./kaldi-master/egs/wsj/s5
 utils/prepare_lang.sh ../../usc/data/local/dict '!sil' ../../usc/data/lang ../../usc/data/lang
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+# export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
