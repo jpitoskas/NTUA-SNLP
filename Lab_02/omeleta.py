@@ -179,7 +179,7 @@ def create_files(src, dest):
             line = line.split('_')
             speaker = line[2]
             id = line[3]
-            utt_id = "utterance_id_"+str(cnt)
+            utt_id = str(speaker)+"-STE-"+str(cnt)
             uttids.write(utt_id+"\n")
             utt2spk.write(utt_id+" "+str(speaker)+"\n")
             wavdir = os.path.join(wavs_dir, speaker)
