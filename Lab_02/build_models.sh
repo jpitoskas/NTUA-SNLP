@@ -59,7 +59,5 @@ for lm_suffix in unigram bigram; do
     echo "Language model has cycles with empty words" && exit 1
   rm -r $tmpdir/g
 done
-#
-# utils/validate_lang.pl data/lang_test_bg || exit 1
-#
-# echo "Succeeded in formatting data."
+
+echo "Succeeded in formatting data."
