@@ -1,5 +1,5 @@
 #!/bin/bash
-source ./kaldi-master/egs/wsj/s5/path.sh
+source ./kaldi-master/egs/usc/path.sh
 # dir = $pwd/kaldi-master/egs/usc/data/local
 # langdir = $pwd/kaldi-master/egs/usc/data/lang
 

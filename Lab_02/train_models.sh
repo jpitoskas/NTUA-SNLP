@@ -1,5 +1,5 @@
 #!/bin/bash
-source ./kaldi-master/egs/wsj/s5/path.sh
+source ./kaldi-master/egs/usc/path.sh
 cd ./kaldi-master/egs/usc/
 
 # Train
