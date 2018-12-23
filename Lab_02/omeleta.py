@@ -89,9 +89,9 @@ def create_lm_filename(filename):
     with open(read, 'r') as read_fd:
         line = read_fd.readline()
         while line:
-            text = line.replace('\n','</s>\n')
+            text = line.replace('\n',' </s>\n')
             text = text.split(' ')
-            text[1] = "<s>" + text[1]
+            text[1] = "<s> " + text[1]
             text = " ".join(text)
             write_fd.write(text)
             line = read_fd.readline()
