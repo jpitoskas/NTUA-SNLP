@@ -83,7 +83,7 @@ def create_lm_filename(filename):
     read_dir = usc_dir + "/data/" + filename
     write_dir = dict_dir
     write_filename = "lm_" + filename + ".text"
-    read = os.path.join(read_dir, "text.txt")
+    read = os.path.join(read_dir, "text")
     write = os.path.join(write_dir, write_filename)
     write_fd = open(write, 'w')
     with open(read, 'r') as read_fd:
@@ -162,13 +162,13 @@ def create_files(src, dest):
     trans = open(transcription_dir, 'r')
     sentences = trans.readlines()
 
-    uttids_dir = os.path.join(dest, 'uttids.txt')
+    uttids_dir = os.path.join(dest, 'uttids')
     uttids = open(uttids_dir, 'w')
-    utt2spk_dir = os.path.join(dest, 'utt2spk.txt')
+    utt2spk_dir = os.path.join(dest, 'utt2spk')
     utt2spk = open(utt2spk_dir, 'w')
     wavscp_dir = os.path.join(dest, 'wav.scp')
     wavscp = open(wavscp_dir, 'w')
-    text_dir = os.path.join(dest, 'text.txt')
+    text_dir = os.path.join(dest, 'text')
     text = open(text_dir, 'w')
 
     with open(src, 'r') as f:
