@@ -5,27 +5,26 @@ source ./kaldi-master/egs/wsj/s5/path.sh
 
 # python3 omeleta.py
 
-build-lm.sh -i ./kaldi-master/egs/usc/data/local/dict/lm_train.text -n 1 -o ./kaldi-master/egs/usc/data/local/lm_tmp/built_lm_unigram.ilm.gz
-build-lm.sh -i ./kaldi-master/egs/usc/data/local/dict/lm_train.text -n 2 -o ./kaldi-master/egs/usc/data/local/lm_tmp/built_lm_bigram.ilm.gz
+cd ./kaldi-master/egs/usc/
+build-lm.sh -i data/local/dict/lm_train.text -n 1 -o data/local/lm_tmp/built_lm_unigram.ilm.gz
+build-lm.sh -i data/local/dict/lm_train.text -n 2 -o data/local/lm_tmp/built_lm_bigram.ilm.gz
 
-compile-lm ./kaldi-master/egs/usc/data/local/lm_tmp/built_lm_unigram.ilm.gz -t=yes /dev/stdout | grep -v unk | gzip -c > ./kaldi-master/egs/usc/data/local/nist_lm/compiled_lm_unigram.arpa.gz
-compile-lm ./kaldi-master/egs/usc/data/local/lm_tmp/built_lm_bigram.ilm.gz -t=yes /dev/stdout | grep -v unk | gzip -c > ./kaldi-master/egs/usc/data/local/nist_lm/compiled_lm_bigram.arpa.gz
+compile-lm data/local/lm_tmp/built_lm_unigram.ilm.gz -t=yes /dev/stdout | grep -v unk | gzip -c > data/local/nist_lm/compiled_lm_unigram.arpa.gz
+compile-lm data/local/lm_tmp/built_lm_bigram.ilm.gz -t=yes /dev/stdout | grep -v unk | gzip -c > data/local/nist_lm/compiled_lm_bigram.arpa.gz
 
-cd ./kaldi-master/egs/wsj/s5
 # utils/validate_dict_dir.pl lang/dict
-sudo utils/prepare_lang.sh ../../usc/data/local/dict '<oov>' ../../usc/data/lang ../../usc/data/lang
+sudo utils/prepare_lang.sh data/local/dict '<oov>' data/lang data/lang
 # export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 
 
 for x in train dev test; do
-  utils/utt2spk_to_spk2utt.pl ../../usc/data/$x/utt2spk > ../../usc/data/$x/spk2utt
+  utils/utt2spk_to_spk2utt.pl data/$x/utt2spk > data/$x/spk2utt
 done
 
 echo Created spk2utt files
 
 echo Preparing language models for test
 
-cd ../../usc
 lmdir=$PWD/data/local/nist_lm
 tmpdir=$PWD/data/local/lm_tmp
 lexicon=$PWD/data/local/dict/lexicon.txt

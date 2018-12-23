@@ -1,6 +1,6 @@
 #!/bin/bash
 source ./kaldi-master/egs/wsj/s5/path.sh
-cd ./kaldi-master/egs/wsj/s5/
+cd ./kaldi-master/egs/usc/
 
 # Train
 steps/train_mono.sh

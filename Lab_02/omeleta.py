@@ -31,7 +31,7 @@ local_dir = os.path.join(usc_dir, 'local/')
 if not os.path.exists(local_dir):
     os.makedirs(local_dir)
 local_score_kaldi_dir = os.path.join(local_dir, 'score_kaldi.sh')
-score_kaldi_dir = os.path.abspath('.kaldi-master/egs/wsj/s5/steps/score_kaldi.sh')
+score_kaldi_dir = os.path.abspath('./kaldi-master/egs/wsj/s5/steps/score_kaldi.sh')
 try:
     os.symlink(score_kaldi_dir, local_score_kaldi_dir)
 except OSError as e:
@@ -41,7 +41,7 @@ except OSError as e:
     else:
         raise e
 usc_steps_dir = os.path.join(usc_dir, 'steps')
-steps_dir = os.path.abspath('.kaldi-master/egs/wsj/s5/steps')
+steps_dir = os.path.abspath('./kaldi-master/egs/wsj/s5/steps')
 try:
     os.symlink(steps_dir, usc_steps_dir)
 except OSError as e:
@@ -51,7 +51,7 @@ except OSError as e:
     else:
         raise e
 usc_utils_dir = os.path.join(usc_dir, 'utils')
-utils_dir = os.path.abspath('.kaldi-master/egs/wsj/s5/utils')
+utils_dir = os.path.abspath('./kaldi-master/egs/wsj/s5/utils')
 try:
     os.symlink(utils_dir, usc_utils_dir)
 except OSError as e:
