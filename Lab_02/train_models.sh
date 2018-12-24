@@ -10,18 +10,29 @@ steps/train_mono.sh --nj 4 data/train data/lang exp/mono || exit 1;
 utils/mkgraph.sh data/lang_test_unigram exp/mono exp/mono/unigram_graph || exit 1;
 utils/mkgraph.sh data/lang_test_bigram exp/mono exp/mono/bigram_graph || exit 1;
 
-# fstdraw --isymbols=exp/mono/unigram_graph/words.txt --osymbols=exp/mono/unigram_graph/words.txt -portrait exp/mono/unigram_graph/HCLG.fst | dot -Gdpi=400 -Tjpg > exp/mono/unigram_graph/mono_unigram.jpg
-# fstdraw --isymbols=exp/mono/bigram_graph/words.txt --osymbols=exp/mono/bigram_graph/words.txt -portrait exp/mono/bigram_graph/HCLG.fst | dot -Gdpi=400 -Tjpg > exp/mono/bigram_graph/mono_bigram.jpg
+fstdraw -portrait exp/mono/unigram_graph/HCLG.fst | dot -Gdpi=400 -Tjpg > exp/mono/unigram_graph/mono_unigram.jpg
+fstdraw -portrait exp/mono/bigram_graph/HCLG.fst | dot -Gdpi=400 -Tjpg > exp/mono/bigram_graph/mono_bigram.jpg
 
-# Decode
-steps/decode.sh --nj 4 exp/mono/unigram_graph data/dev exp/mono/decode_uni_dev
-steps/decode.sh --nj 4 exp/mono/unigram_graph data/test exp/mono/decode_uni_test
+# Decode unigram
+steps/decode.sh --nj 4 exp/mono/unigram_graph data/dev exp/mono/decode_ug_dev
+steps/decode.sh --nj 4 exp/mono/unigram_graph data/test exp/mono/decode_ug_test
 
-# Alignment
-steps/align_si.sh --nj 4 data/train data/lang_test_unigram exp/mono exp/mono_ali
+# Decode bigram
+steps/decode.sh --nj 4 exp/mono/bigram_graph data/dev exp/mono/decode_bg_dev
+steps/decode.sh --nj 4 exp/mono/bigram_graph data/test exp/mono/decode_bg_test
 
-# Train triphone
-steps/train_deltas.sh 2000 10000 data/train data/lang_test_unigram exp/mono_ali exp/tri
+# Alignment (ug and bg)
+steps/align_si.sh --nj 4 data/train data/lang_test_unigram exp/mono exp/mono_ug_ali
+steps/align_si.sh --nj 4 data/train data/lang_test_bigram exp/mono exp/mono_bg_ali
 
-utils/mkgraph.sh data/lang_test_unigram exp/tri exp/tri/graph
-steps/decode.sh --nj 4 exp/tri/graph data/test exp/tri/decode
+# Train triphone unigram
+steps/train_deltas.sh 2000 10000 data/train data/lang_test_unigram exp/mono_ug_ali exp/tri_ug
+
+utils/mkgraph.sh data/lang_test_unigram exp/tri_ug exp/tri_ug/graph
+steps/decode.sh --nj 4 exp/tri_ug/graph data/test exp/tri_ug/decode
+
+# Train triphone bigram
+steps/train_deltas.sh 2000 10000 data/train data/lang_test_bigram exp/mono_bg_ali exp/tri_bg
+
+utils/mkgraph.sh data/lang_test_bigram exp/tri_bg exp/tri_bg/graph
+steps/decode.sh --nj 4 exp/tri_bg/graph data/test exp/tri_bg/decode
