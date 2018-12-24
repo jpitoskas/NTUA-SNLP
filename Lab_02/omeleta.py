@@ -30,7 +30,7 @@ usc_dir = os.path.abspath('./kaldi-master/egs/usc/')
 local_dir = os.path.join(usc_dir, 'local/')
 if not os.path.exists(local_dir):
     os.makedirs(local_dir)
-local_score_kaldi_dir = os.path.join(local_dir, 'score_kaldi.sh')
+local_score_kaldi_dir = os.path.join(local_dir, 'score.sh')
 score_kaldi_dir = os.path.abspath('./kaldi-master/egs/wsj/s5/steps/score_kaldi.sh')
 try:
     os.symlink(score_kaldi_dir, local_score_kaldi_dir)
