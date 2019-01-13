@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
 from tqdm import tqdm
+import numpy as np
 import nltk
 # nltk.download('punkt')
 
@@ -81,6 +82,19 @@ class SentenceDataset(Dataset):
         """
 
         # EX3
+        self.maxlen = len(max(self.data, key=len))
 
-        # return example, label, length
+        self.example = np.zeros(self.maxlen, dtype=int)
+
+        for i in range(len(self.data[index])):
+            word = self.data[index][i]
+            try:
+                self.example[i] = self.word2idx[word]
+            except KeyError:
+                self.example[i] = self.word2idx["<unk>"]
+
+        self.label = self.labels[index]
+        self.length = len(self.data[index])
+
+        return self.example, self.label, self.length
         raise NotImplementedError
