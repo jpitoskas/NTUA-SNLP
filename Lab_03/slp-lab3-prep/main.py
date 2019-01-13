@@ -61,12 +61,16 @@ y_train = le.fit_transform(y_train)  # EX1
 y_test = le.fit_transform(y_test)  # EX1
 n_classes = le.classes_.size  # EX1 - LabelEncoder.classes_.size
 
-print("First 10 labels with encodings:")
+print("\nFirst 10 train labels with encodings:\n")
 for i in range(10):
     print(str(y_labels[i]) + " -> " + str(y_train[i]))
 
 # Define our PyTorch-based Dataset
 train_set = SentenceDataset(X_train, y_train, word2idx)
+print("\nFirst 10 tokenized train data:\n")
+for i in range(10):
+    print(train_set.data[i])
+    # print(train_set.labels[i])
 test_set = SentenceDataset(X_test, y_test, word2idx)
 
 # EX4 - Define our PyTorch-based DataLoader

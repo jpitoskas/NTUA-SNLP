@@ -1,5 +1,7 @@
 from torch.utils.data import Dataset
 from tqdm import tqdm
+import nltk
+# nltk.download('punkt')
 
 
 class SentenceDataset(Dataset):
@@ -31,12 +33,15 @@ class SentenceDataset(Dataset):
             word2idx (dict): a dictionary which maps words to indexes
         """
 
-        # self.data = X
-        # self.labels = y
-        # self.word2idx = word2idx
+        self.data = []
+        self.labels = y
+        self.word2idx = word2idx
+
+        for sentence in X:
+            self.data.append(nltk.word_tokenize(sentence))
 
         # EX2
-        raise NotImplementedError
+        # raise NotImplementedError
 
     def __len__(self):
         """
@@ -79,4 +84,3 @@ class SentenceDataset(Dataset):
 
         # return example, label, length
         raise NotImplementedError
-
