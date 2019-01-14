@@ -84,8 +84,8 @@ for _ in range(5):
     print(length)
 
 # EX4 - Define our PyTorch-based DataLoader
-train_loader = DataLoader(train_set, batch_size=100)  # EX7
-test_loader = DataLoader(test_set, batch_size=100)  # EX7
+train_loader = DataLoader(train_set, batch_size=100, shuffle=True)  # EX7
+test_loader = DataLoader(test_set, batch_size=100, shuffle=True)  # EX7
 
 #############################################################################
 # Model Definition (Model, Loss Function, Optimizer)
@@ -112,6 +112,12 @@ optimizer = torch.optim.RMSprop(parameters)  # EX8
 #############################################################################
 # Training Pipeline
 #############################################################################
+def acc(y, y_hat):
+    return accuracy_score(y, y_hat)
+
+def f1(y, y_hat):
+    return f1_score(y, y_hat, average='macro')
+
 for epoch in range(1, EPOCHS + 1):
     # train the model for one epoch
     train_dataset(epoch, train_loader, model, criterion, optimizer)
@@ -120,7 +126,8 @@ for epoch in range(1, EPOCHS + 1):
     train_loss, (y_train_gold, y_train_pred) = eval_dataset(train_loader,
                                                             model,
                                                             criterion)
-
+    print("Train Set: loss={:.4f}, acc={:.4f}, f1={:.4f}".format(train_loss,acc(y_train_gold, y_train_pred),f1(y_train_gold, y_train_pred)))
     test_loss, (y_test_gold, y_test_pred) = eval_dataset(test_loader,
                                                          model,
                                                          criterion)
+    print("Test Set: loss={:.4f}, acc={:.4f}, f1={:.4f}".format(test_loss,acc(y_test_gold, y_test_pred),f1(y_test_gold, y_test_pred)))
