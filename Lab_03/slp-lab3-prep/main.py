@@ -84,19 +84,22 @@ for _ in range(5):
     print(length)
 
 # EX4 - Define our PyTorch-based DataLoader
-train_loader = ...  # EX7
-test_loader = ...  # EX7
+# train_loader = ...  # EX7
+# test_loader = ...  # EX7
 
 #############################################################################
 # Model Definition (Model, Loss Function, Optimizer)
 #############################################################################
-model = BaselineDNN(output_size=...,  # EX8
+model = BaselineDNN(output_size=n_classes,  # EX8
                     embeddings=embeddings,
                     trainable_emb=EMB_TRAINABLE)
 
 # move the mode weight to cpu or gpu
 model.to(DEVICE)
+model.forward(train_set, 10)
 print(model)
+
+raise NotImplementedError
 
 # We optimize ONLY those parameters that are trainable (p.requires_grad==True)
 criterion = ...  # EX8
