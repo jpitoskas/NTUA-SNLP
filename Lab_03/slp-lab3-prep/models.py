@@ -25,7 +25,6 @@ class BaselineDNN(nn.Module):
 
         super(BaselineDNN, self).__init__()
 
-        self.batch_size = 100
         self.emb_dim = 50
 
         # 1 - define the embedding layer
@@ -53,7 +52,7 @@ class BaselineDNN(nn.Module):
 
         self.final = nn.Linear(self.emb_dim, output_size)
 
-    def forward(self, x, lengths):
+    def forward(self, x, l, lengths):
         """
         This is the heart of the model.
         This function, defines how the data passes through the network.
@@ -61,15 +60,14 @@ class BaselineDNN(nn.Module):
         Returns: the logits for each class
 
         """
-
+        self.batch_size = lengths
         # 1 - embed the words, using the embedding layer
         # EX6
 
         # self.batch_size, 62. self.emb_dim
-        embeddings = np.zeros((self.batch_size, 62, 50))
+        embeddings = np.zeros((self.batch_size, 62, self.emb_dim))
         for i in range(self.batch_size):
-            example, _, _ = x[i]
-            e = torch.from_numpy(example)
+            e = x[i]
             embeddings[i] = self.embed(e)  # EX6
 
         # 2 - construct a sentence representation out of the word embeddings
@@ -78,7 +76,7 @@ class BaselineDNN(nn.Module):
         for i in range(self.batch_size):
             for j in range(self.emb_dim):
                 rep_sum = 0
-                _, _, length = x[i]
+                length = l[i]
                 for k in range(length):
                     rep_sum += embeddings[i][k][j]
                 rep_sum /= length

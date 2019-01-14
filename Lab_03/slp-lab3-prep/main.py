@@ -84,8 +84,8 @@ for _ in range(5):
     print(length)
 
 # EX4 - Define our PyTorch-based DataLoader
-# train_loader = ...  # EX7
-# test_loader = ...  # EX7
+train_loader = DataLoader(train_set, batch_size=100)  # EX7
+test_loader = DataLoader(test_set, batch_size=100)  # EX7
 
 #############################################################################
 # Model Definition (Model, Loss Function, Optimizer)
@@ -96,15 +96,18 @@ model = BaselineDNN(output_size=n_classes,  # EX8
 
 # move the mode weight to cpu or gpu
 model.to(DEVICE)
-model.forward(train_set, 10)
 print(model)
 
-raise NotImplementedError
 
 # We optimize ONLY those parameters that are trainable (p.requires_grad==True)
-criterion = ...  # EX8
-parameters = ...  # EX8
-optimizer = ...  # EX8
+criterion = torch.nn.BCEWithLogitsLoss()  # EX8
+parameters = []  # EX8
+for p in model.parameters():
+    # p.requires_grad = False
+    if(p.requires_grad==True):
+        parameters.append(p)
+optimizer = torch.optim.RMSprop(parameters)  # EX8
+# raise NotImplementedError
 
 #############################################################################
 # Training Pipeline
