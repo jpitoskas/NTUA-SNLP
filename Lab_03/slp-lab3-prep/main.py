@@ -1,9 +1,12 @@
 import os
 import warnings
 from random import randint
+import numpy as np
+import matplotlib.pyplot as plt
 
 from sklearn.exceptions import UndefinedMetricWarning
 from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import torch
 from torch.utils.data import DataLoader
 
@@ -31,12 +34,13 @@ EMBEDDINGS = os.path.join(EMB_PATH, "glove.6B.50d.txt")
 EMB_DIM = 50
 
 EMB_TRAINABLE = False
-BATCH_SIZE = 128
+BATCH_SIZE = 100
 EPOCHS = 50
 DATASET = "MR"  # options: "MR", "Semeval2017A"
 
 # if your computer has a CUDA compatible gpu use it, otherwise use the cpu
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device('cpu')
 
 ########################################################
 # Define PyTorch datasets and dataloaders
@@ -84,8 +88,8 @@ for _ in range(5):
     print(length)
 
 # EX4 - Define our PyTorch-based DataLoader
-train_loader = DataLoader(train_set, batch_size=100, shuffle=True)  # EX7
-test_loader = DataLoader(test_set, batch_size=100, shuffle=True)  # EX7
+train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)  # EX7
+test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=True)  # EX7
 
 #############################################################################
 # Model Definition (Model, Loss Function, Optimizer)
@@ -95,12 +99,12 @@ model = BaselineDNN(output_size=n_classes,  # EX8
                     trainable_emb=EMB_TRAINABLE)
 
 # move the mode weight to cpu or gpu
-model.to(DEVICE)
+# model.to(DEVICE)
 print(model)
 
 
 # We optimize ONLY those parameters that are trainable (p.requires_grad==True)
-criterion = torch.nn.BCEWithLogitsLoss()  # EX8
+criterion = torch.nn.CrossEntropyLoss()  # EX8
 parameters = []  # EX8
 for p in model.parameters():
     # p.requires_grad = False
@@ -112,11 +116,9 @@ optimizer = torch.optim.RMSprop(parameters)  # EX8
 #############################################################################
 # Training Pipeline
 #############################################################################
-def acc(y, y_hat):
-    return accuracy_score(y, y_hat)
 
-def f1(y, y_hat):
-    return f1_score(y, y_hat, average='macro')
+losses_train = []
+losses_test = []
 
 for epoch in range(1, EPOCHS + 1):
     # train the model for one epoch
@@ -126,8 +128,24 @@ for epoch in range(1, EPOCHS + 1):
     train_loss, (y_train_gold, y_train_pred) = eval_dataset(train_loader,
                                                             model,
                                                             criterion)
-    print("Train Set: loss={:.4f}, acc={:.4f}, f1={:.4f}".format(train_loss,acc(y_train_gold, y_train_pred),f1(y_train_gold, y_train_pred)))
+    print()
+    print("Train Set: loss={:.4f}, accuracy={:.4f}, f1={:.4f}, recall={:.4f}".format(train_loss, accuracy_score(y_train_gold, y_train_pred), f1_score(y_train_gold, y_train_pred, average='macro'), recall_score(y_train_gold, y_train_pred, average='macro')))
     test_loss, (y_test_gold, y_test_pred) = eval_dataset(test_loader,
                                                          model,
                                                          criterion)
-    print("Test Set: loss={:.4f}, acc={:.4f}, f1={:.4f}".format(test_loss,acc(y_test_gold, y_test_pred),f1(y_test_gold, y_test_pred)))
+    print("Test Set: loss={:.4f}, accuracy={:.4f}, f1={:.4f}, recall={:.4f}".format(test_loss, accuracy_score(y_test_gold, y_test_pred), f1_score(y_test_gold, y_test_pred, average='macro'), recall_score(y_train_gold, y_train_pred, average='macro')))
+
+    losses_train.append(train_loss)
+    losses_test.append(test_loss)
+
+losses_train_arr = np.array(losses_train)
+losses_test_arr = np.array(losses_test)
+
+plt.figure(1)
+plt.title("Train loss")
+plt.plot(losses_train_arr)
+plt.show()
+plt.figure(2)
+plt.title("Test loss")
+plt.plot(losses_test_arr)
+plt.show()

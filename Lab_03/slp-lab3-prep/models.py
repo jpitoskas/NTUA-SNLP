@@ -12,6 +12,12 @@ class BaselineDNN(nn.Module):
        to the number of classes.ngth)
     """
 
+    @staticmethod
+    def _mean_pooling(x, lengths):
+        sums = torch.sum(x, dim=1)
+        _lens = lengths.view(-1, 1).expand(sums.size(0), sums.size(1))
+        means = sums / _lens.double()
+        return means
 
     def __init__(self, output_size, embeddings, trainable_emb=False):
         """
@@ -25,7 +31,7 @@ class BaselineDNN(nn.Module):
 
         super(BaselineDNN, self).__init__()
 
-        self.emb_dim = 50
+        self.emb_dim = embeddings.shape[1]
 
         # 1 - define the embedding layer
         # EX4
@@ -37,7 +43,7 @@ class BaselineDNN(nn.Module):
 
         # 3 - define if the embedding layer will be frozen or finetuned
         # EX4
-        # print(embeddings)
+        # ALL 3 TOGETHER
         embeddings = torch.from_numpy(embeddings)
         self.embed = nn.Embedding.from_pretrained(embeddings, freeze=not(trainable_emb), sparse=False)
 
@@ -52,7 +58,7 @@ class BaselineDNN(nn.Module):
 
         self.final = nn.Linear(self.emb_dim, output_size)
 
-    def forward(self, x, l, lengths):
+    def forward(self, x, lengths):
         """
         This is the heart of the model.
         This function, defines how the data passes through the network.
@@ -60,32 +66,38 @@ class BaselineDNN(nn.Module):
         Returns: the logits for each class
 
         """
-        self.batch_size = lengths
+        self.batch_size = lengths[0]
+        self.l = lengths[1]
+        self.maxlen = x.shape[1]
+
         # 1 - embed the words, using the embedding layer
         # EX6
 
-        # self.batch_size, 62. self.emb_dim
-        embeddings = np.zeros((self.batch_size, 62, self.emb_dim))
+        # batch_size, 21, emb_dim
+        embeddings = np.zeros((self.batch_size, self.maxlen, self.emb_dim))
         for i in range(self.batch_size):
             e = x[i]
-            embeddings[i] = self.embed(e)  # EX6
+            embeddings[i] = self.embed(e.long())  # EX6
 
         # 2 - construct a sentence representation out of the word embeddings
         # EX6
-        representations = np.zeros((self.batch_size, self.emb_dim))
-        for i in range(self.batch_size):
-            for j in range(self.emb_dim):
-                rep_sum = 0
-                length = l[i]
-                for k in range(length):
-                    rep_sum += embeddings[i][k][j]
-                rep_sum /= length
-                representations[i][j] = rep_sum
+
+        # representations = np.zeros((self.batch_size, self.emb_dim))
+        # for i in range(self.batch_size):
+        #     for j in range(self.emb_dim):
+        #         rep_sum = 0
+        #         length = self.l[i]
+        #         N = min(self.maxlen, length)
+        #         for k in range(N):
+        #             rep_sum += embeddings[i][k][j]
+        #         rep_sum /= length
+        #         representations[i][j] = rep_sum
+
+        representations = self._mean_pooling(torch.from_numpy(embeddings), self.l)
 
         # 3 - transform the representations to new ones.
         # EX6
-        representations = self.tanh(torch.from_numpy(representations).float())
-        print(type(representations))
+        representations = self.tanh(representations.float())
 
         # 4 - project the representations to classes using a linear layer
         # EX6

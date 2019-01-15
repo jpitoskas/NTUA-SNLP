@@ -30,14 +30,22 @@ def train_dataset(_epoch, dataloader, model, loss_function, optimizer):
     model.train()
     running_loss = 0.0
 
+    num_elements = len(dataloader.dataset)
+    num_batches = len(dataloader)
+
     # obtain the model's device ID
     device = next(model.parameters()).device
 
     for index, batch in enumerate(dataloader, 1):
+        if (index == num_batches-1):
+            break
         # get the inputs (batch)
         inputs, labels, lengths = batch
 
         # move the batch tensors to the right device
+        # if (torch.cuda.is_available()):
+        #     batch = map(lambda x : x.cuda(get_gpu_id()), batch)
+        device = torch.device('cpu')
         model.to(device)  # EX9
 
         # Step 1 - zero the gradients
@@ -46,7 +54,8 @@ def train_dataset(_epoch, dataloader, model, loss_function, optimizer):
         optimizer.zero_grad()  # EX9
 
         # Step 2 - forward pass: y' = model(x)
-        outputs = model(inputs, lengths, 100)  # EX9
+        all_length = [dataloader.batch_size, lengths]
+        outputs = model(inputs, all_length)  # EX9
 
         # Step 3 - compute loss: L = loss_function(y, y')
         loss = loss_function(outputs, labels)  # EX9
@@ -75,6 +84,9 @@ def eval_dataset(dataloader, model, loss_function):
     model.eval()
     running_loss = 0.0
 
+    num_elements = len(dataloader.dataset)
+    num_batches = len(dataloader)
+
     y_pred = []  # the predicted labels
     y = []  # the gold labels
 
@@ -85,14 +97,20 @@ def eval_dataset(dataloader, model, loss_function):
     # so we do everything under torch.no_grad()
     with torch.no_grad():
         for index, batch in enumerate(dataloader, 1):
+            if (index == num_batches-1):
+                break
             # get the inputs (batch)
             inputs, labels, lengths = batch
 
             # Step 1 - move the batch tensors to the right device
+            # if (torch.cuda.is_available()):
+            #     batch = map(lambda x : x.cuda(get_gpu_id()), batch)
+            device = torch.device('cpu')
             model.to(device)  # EX9
 
             # Step 2 - forward pass: y' = model(x)
-            outputs = model(inputs, lengths, 100)  # EX9
+            all_length = [dataloader.batch_size, lengths]
+            outputs = model(inputs, all_length)  # EX9
 
             # Step 3 - compute loss.
             # We compute the loss only for inspection (compare train/test loss)
@@ -103,7 +121,14 @@ def eval_dataset(dataloader, model, loss_function):
             _, posibol = torch.max(outputs, 1)  # EX9
 
             # Step 5 - collect the predictions, gold labels and batch loss
-            # posibol, loss# EX9
+            # EX9
+            start = index * dataloader.batch_size
+            end = start + dataloader.batch_size
+            if (index == num_batches-1):
+                end = num_elements
+            y_pred[start:end] = posibol
+            y[start:end] = labels
+
 
             running_loss += loss.data.item()
 

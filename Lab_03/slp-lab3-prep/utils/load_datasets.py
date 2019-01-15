@@ -61,8 +61,8 @@ def load_from_dir(path):
 
 
 def load_Semeval2017A():
-    train = load_from_dir(os.path.join(DATA_PATH, "Semeval2017A/train_dev"))
-    test = load_from_dir(os.path.join(DATA_PATH, "Semeval2017A/gold"))
+    train = load_from_dir(os.path.join(DATA_PATH, "Semeval2017A/train_dev"), encoding="utf8")
+    test = load_from_dir(os.path.join(DATA_PATH, "Semeval2017A/gold"), encoding="utf8")
 
     X_train = [x[1] for x in train]
     y_train = [x[0] for x in train]
@@ -73,29 +73,8 @@ def load_Semeval2017A():
 
 
 def load_MR():
-    pos = open(os.path.join(DATA_PATH, "MR/rt-polarity.pos")).readlines()
-    neg = open(os.path.join(DATA_PATH, "MR/rt-polarity.neg")).readlines()
-
-    pos = [x.strip() for x in pos]
-    neg = [x.strip() for x in neg]
-
-    pos_labels = ["positive"] * len(pos)
-    neg_labels = ["negative"] * len(neg)
-
-    split = 5000
-
-    X_train = pos[:split] + neg[:split]
-    y_train = pos_labels[:split] + neg_labels[:split]
-
-    X_test = pos[split:] + neg[split:]
-    y_test = pos_labels[split:] + neg_labels[split:]
-
-    return X_train, y_train, X_test, y_test
-
-
-def load_MR():
-    pos = open(os.path.join(DATA_PATH, "MR/rt-polarity.pos")).readlines()
-    neg = open(os.path.join(DATA_PATH, "MR/rt-polarity.neg")).readlines()
+    pos = open(os.path.join(DATA_PATH, "MR/rt-polarity.pos"), encoding="utf8").readlines()
+    neg = open(os.path.join(DATA_PATH, "MR/rt-polarity.neg"), encoding="utf8").readlines()
 
     pos = [x.strip() for x in pos]
     neg = [x.strip() for x in neg]

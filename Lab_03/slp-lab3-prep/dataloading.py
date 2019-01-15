@@ -1,6 +1,7 @@
 from torch.utils.data import Dataset
 from tqdm import tqdm
 import numpy as np
+from math import floor
 import nltk
 # nltk.download('punkt')
 
@@ -82,11 +83,18 @@ class SentenceDataset(Dataset):
         """
 
         # EX3
-        self.maxlen = len(max(self.data, key=len))
+
+        N = len(self.data)
+        sum = 0
+        for i in range(N):
+            sum += len(self.data[i])
+        self.maxlen = floor(sum/N)
 
         self.example = np.zeros(self.maxlen, dtype=int)
 
-        for i in range(len(self.data[index])):
+        sent_len = min(self.maxlen, len(self.data[index]))
+        
+        for i in range(sent_len):
             word = self.data[index][i]
             try:
                 self.example[i] = self.word2idx[word]
