@@ -93,7 +93,7 @@ class SentenceDataset(Dataset):
         self.example = np.zeros(self.maxlen, dtype=int)
 
         sent_len = min(self.maxlen, len(self.data[index]))
-        
+
         for i in range(sent_len):
             word = self.data[index][i]
             try:

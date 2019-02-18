@@ -91,7 +91,9 @@ class BaselineDNN(nn.Module):
         # EX6
 
         # batch_size, 21, emb_dim
-        embedding = torch.tensor(np.zeros((self.batch_size, self.maxlen, self.emb_dim))).cuda()
+        embedding = torch.tensor(np.zeros((self.batch_size, self.maxlen, self.emb_dim)))
+        if (torch.cuda.is_available()):
+            embedding = embedding.cuda()
         for i in range(self.batch_size):
             e = x[i].long()
             embedding[i] = self.embed(e)  # EX6
