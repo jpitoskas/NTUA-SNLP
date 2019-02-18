@@ -34,13 +34,15 @@ EMBEDDINGS = os.path.join(EMB_PATH, "glove.6B.50d.txt")
 EMB_DIM = 50
 
 EMB_TRAINABLE = False
-BATCH_SIZE = 100
+BATCH_SIZE = 64
 EPOCHS = 50
 DATASET = "MR"  # options: "MR", "Semeval2017A"
 
 # if your computer has a CUDA compatible gpu use it, otherwise use the cpu
-# DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-DEVICE = torch.device('cpu')
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(DEVICE)
+print(torch.version.cuda)
+# DEVICE = torch.device('cpu')
 
 ########################################################
 # Define PyTorch datasets and dataloaders
@@ -66,26 +68,26 @@ y_train = le.fit_transform(y_train)  # EX1
 y_test = le.fit_transform(y_test)  # EX1
 n_classes = le.classes_.size  # EX1 - LabelEncoder.classes_.size
 
-print("\nEX1: First 10 train labels with encodings:\n")
-for i in range(10):
-    print(str(y_labels[i]) + " -> " + str(y_train[i]))
+# print("\nEX1: First 10 train labels with encodings:\n")
+# for i in range(10):
+    # print(str(y_labels[i]) + " -> " + str(y_train[i]))
 
 # Define our PyTorch-based Dataset
 train_set = SentenceDataset(X_train, y_train, word2idx)
-print("\nEX2: First 10 tokenized train data:\n")
-for i in range(10):
-    print(train_set.data[i])
+# print("\nEX2: First 10 tokenized train data:\n")
+# for i in range(10):
+    # print(train_set.data[i])
     # print(train_set.labels[i])
 test_set = SentenceDataset(X_test, y_test, word2idx)
 
-print("\nEX3: 5 random SentenceDatasets from train set:\n")
-for _ in range(5):
-    rnd = randint(0, len(train_set))
-    example, label, length = train_set[rnd]
-    print(train_set.data[rnd])
-    print(example)
-    print(label)
-    print(length)
+# print("\nEX3: 5 random SentenceDatasets from train set:\n")
+# for _ in range(5):
+#     rnd = randint(0, len(train_set))
+#     example, label, length = train_set[rnd]
+    # print(train_set.data[rnd])
+    # print(example)
+    # print(label)
+    # print(length)
 
 # EX4 - Define our PyTorch-based DataLoader
 train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)  # EX7
@@ -99,7 +101,7 @@ model = BaselineDNN(output_size=n_classes,  # EX8
                     trainable_emb=EMB_TRAINABLE)
 
 # move the mode weight to cpu or gpu
-# model.to(DEVICE)
+model = model.to(DEVICE)
 print(model)
 
 

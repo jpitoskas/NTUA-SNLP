@@ -2,6 +2,7 @@ import math
 import sys
 
 import torch
+from torch.autograd import Variable
 
 
 def progress(loss, epoch, batch, batch_size, dataset_size):
@@ -45,8 +46,10 @@ def train_dataset(_epoch, dataloader, model, loss_function, optimizer):
         # move the batch tensors to the right device
         # if (torch.cuda.is_available()):
         #     batch = map(lambda x : x.cuda(get_gpu_id()), batch)
-        device = torch.device('cpu')
-        model.to(device)  # EX9
+        # device = torch.device('cpu')
+        inputs = Variable(inputs).to(device)  # EX9
+        labels = Variable(labels).to(device)
+        lengths = Variable(lengths).to(device)
 
         # Step 1 - zero the gradients
         # Remember that PyTorch accumulates gradients.
@@ -105,8 +108,10 @@ def eval_dataset(dataloader, model, loss_function):
             # Step 1 - move the batch tensors to the right device
             # if (torch.cuda.is_available()):
             #     batch = map(lambda x : x.cuda(get_gpu_id()), batch)
-            device = torch.device('cpu')
-            model.to(device)  # EX9
+            # device = torch.device('cpu')
+            inputs = Variable(inputs).to(device)  # EX9
+            labels = Variable(labels).to(device)
+            lengths = Variable(lengths).to(device)
 
             # Step 2 - forward pass: y' = model(x)
             all_length = [dataloader.batch_size, lengths]

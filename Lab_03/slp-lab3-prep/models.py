@@ -14,10 +14,17 @@ class BaselineDNN(nn.Module):
 
     @staticmethod
     def _mean_pooling(x, lengths):
-        sums = torch.sum(x, dim=1)
+        sums = torch.sum(x, dim=1).float()
+        if (torch.cuda.is_available()):
+            sums = sums.cuda()
         _lens = lengths.view(-1, 1).expand(sums.size(0), sums.size(1))
-        means = sums / _lens.double()
+        means = sums / _lens.float()
         return means
+
+    @staticmethod
+    def _max_pooling(x):
+        maxed, _ = torch.max(x, dim=1)
+        return maxed.float()
 
     def __init__(self, output_size, embeddings, trainable_emb=False):
         """
@@ -44,13 +51,23 @@ class BaselineDNN(nn.Module):
         # 3 - define if the embedding layer will be frozen or finetuned
         # EX4
         # ALL 3 TOGETHER
-        embeddings = torch.from_numpy(embeddings)
-        self.embed = nn.Embedding.from_pretrained(embeddings, freeze=not(trainable_emb), sparse=False)
+        self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
 
         # 4 - define a non-linear transformation of the representations
         # EX5
 
         self.tanh = nn.Tanh()
+
+        # LSTM
+        # self.lstm_embed = nn.LSTM(input_size=embeddings.shape[1],
+        #                    hidden_size=rnn_size,
+        #                    num_layers=rnn_layers,
+        #                    bidirectional=bidirectional,
+        #                    dropout=dropout_rnn,
+        #                    batch_first=True)
+        #
+        # # the dropout "layer" for the output of the RNN
+        # self.drop_lstm = nn.Dropout(dropout_rnn)
 
         # 5 - define the final Linear layer which maps
         # the representations to the classes
@@ -74,10 +91,10 @@ class BaselineDNN(nn.Module):
         # EX6
 
         # batch_size, 21, emb_dim
-        embeddings = np.zeros((self.batch_size, self.maxlen, self.emb_dim))
+        embedding = torch.tensor(np.zeros((self.batch_size, self.maxlen, self.emb_dim))).cuda()
         for i in range(self.batch_size):
-            e = x[i]
-            embeddings[i] = self.embed(e.long())  # EX6
+            e = x[i].long()
+            embedding[i] = self.embed(e)  # EX6
 
         # 2 - construct a sentence representation out of the word embeddings
         # EX6
@@ -93,11 +110,12 @@ class BaselineDNN(nn.Module):
         #         rep_sum /= length
         #         representations[i][j] = rep_sum
 
-        representations = self._mean_pooling(torch.from_numpy(embeddings), self.l)
+        # representations = self._mean_pooling(embedding, self.l)
+        representations = torch.cat((self._mean_pooling(embedding, self.l), self._max_pooling(embedding)), 0)
 
         # 3 - transform the representations to new ones.
         # EX6
-        representations = self.tanh(representations.float())
+        representations = self.tanh(representations)
 
         # 4 - project the representations to classes using a linear layer
         # EX6
