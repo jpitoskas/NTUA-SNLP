@@ -2,8 +2,10 @@ import torch
 import numpy as np
 from torch import nn
 
+from utils.SelfAttention import SelfAttention
 
-class BaselineDNN(nn.Module):
+
+class PreLabBaselineDNN(nn.Module):
     """
     1. We embed the words in the input texts using an embedding layer
     2. We compute the min, mean, max of the word embeddings in each sample
@@ -13,24 +15,13 @@ class BaselineDNN(nn.Module):
     """
 
     @staticmethod
-    def _mean_pooling(x, lengths):
+    def mean_pooling(x, lengths):
         sums = torch.sum(x, dim=1).float()
         if (torch.cuda.is_available()):
             sums = sums.cuda()
         _lens = lengths.view(-1, 1).expand(sums.size(0), sums.size(1))
         means = sums / _lens.float()
         return means
-
-    @staticmethod
-    def _max_pooling(x):
-        maxed, _ = torch.max(x, dim=1)
-        return maxed.float()
-
-    def last_timestep(self, unpacked, lengths):
-        # Index of the last output for each sequence.
-        idx = (lengths - 1).view(-1, 1).expand(unpacked.size(0),
-                                               unpacked.size(2)).unsqueeze(1)
-        return unpacked.gather(1, idx).squeeze()
 
     def __init__(self, output_size, embeddings, trainable_emb=False):
         """
@@ -42,7 +33,7 @@ class BaselineDNN(nn.Module):
                 the embedding layer
         """
 
-        super(BaselineDNN, self).__init__()
+        super(PreLabBaselineDNN, self).__init__()
 
         self.emb_dim = embeddings.shape[1]
 
@@ -63,13 +54,6 @@ class BaselineDNN(nn.Module):
         # EX5
 
         self.tanh = nn.Tanh()
-
-        # LSTM
-        self.lstm_embed = nn.LSTM(input_size=embeddings.shape[1],
-                           hidden_size=embeddings.shape[1], batch_first=True)
-
-        # # the dropout "layer" for the output of the RNN
-        # self.drop_lstm = nn.Dropout(dropout_rnn)
 
         # 5 - define the final Linear layer which maps
         # the representations to the classes
@@ -115,23 +99,320 @@ class BaselineDNN(nn.Module):
         #         rep_sum /= length
         #         representations[i][j] = rep_sum
 
+        representations = self.mean_pooling(embedding, self.l)
+
+        # 3 - transform the representations to new ones.
+        # EX6
+        representations = self.tanh(representations)
+
+        # 4 - project the representations to classes using a linear layer
+        # EX6
+        logits = self.final(representations)
+
+        return logits
+
+class MeanMaxDNN(nn.Module):
+    """
+    1. We embed the words in the input texts using an embedding layer
+    2. We compute the min, mean, max of the word embeddings in each sample
+       and use it as the feature representation of the sequence.
+    4. We project with a linear layer the representation
+       to the number of classes.ngth)
+    """
+
+    @staticmethod
+    def mean_pooling(x, lengths):
+        sums = torch.sum(x, dim=1).float()
+        if (torch.cuda.is_available()):
+            sums = sums.cuda()
+        _lens = lengths.view(-1, 1).expand(sums.size(0), sums.size(1))
+        means = sums / _lens.float()
+        return means
+
+    @staticmethod
+    def max_pooling(x):
+        maxed, _ = torch.max(x, dim=1)
+        return maxed.float()
+
+    def __init__(self, output_size, embeddings, trainable_emb=False):
+        """
+
+        Args:
+            output_size(int): the number of classes
+            embeddings(bool):  the 2D matrix with the pretrained embeddings
+            trainable_emb(bool): train (finetune) or freeze the weights
+                the embedding layer
+        """
+
+        super(MeanMaxDNN, self).__init__()
+
+        self.emb_dim = embeddings.shape[1]
+
+        # 1 - define the embedding layer from pretrained weights
+        self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
+
+        # 5 - define the final Linear layer which maps the representations to the classes
+        self.final = nn.Linear(self.emb_dim, output_size)
+
+    def forward(self, x, lengths):
+        """
+        This is the heart of the model.
+        This function, defines how the data passes through the network.
+
+        Returns: the logits for each class
+
+        """
+        self.batch_size = lengths[0]
+        self.l = lengths[1]
+        self.maxlen = x.shape[1]
+
+        # 1 - embed the words, using the embedding layer
+
+        # batch_size, 21, emb_dim
+        embedding = self.embed(x.long())
+        if (torch.cuda.is_available()):
+            embedding = embedding.cuda()
+
+        # 2 - construct a sentence representation out of the word embeddings
+        representations = torch.cat((self.mean_pooling(embedding, self.l), self.max_pooling(embedding)), 0)
+
+        # 4 - project the representations to classes using a linear layer
+        logits = self.final(representations)
+
+        return logits
+
+class LSTMDNN(nn.Module):
+    """
+    1. We embed the words in the input texts using an embedding layer
+    2. We compute the min, mean, max of the word embeddings in each sample
+       and use it as the feature representation of the sequence.
+    4. We project with a linear layer the representation
+       to the number of classes.ngth)
+    """
+
+    @staticmethod
+    def mean_pooling(x, lengths):
+        sums = torch.sum(x, dim=1).float()
+        if (torch.cuda.is_available()):
+            sums = sums.cuda()
+        _lens = lengths.view(-1, 1).expand(sums.size(0), sums.size(1))
+        means = sums / _lens.float()
+        return means
+
+    @staticmethod
+    def max_pooling(x):
+        maxed, _ = torch.max(x, dim=1)
+        return maxed.float()
+
+    def last_timestep(self, unpacked, lengths):
+        # Index of the last output for each sequence.
+        idx = (lengths - 1).view(-1, 1).expand(unpacked.size(0),
+                                               unpacked.size(2)).unsqueeze(1)
+        return unpacked.gather(1, idx).squeeze()
+
+    def __init__(self, output_size, embeddings, trainable_emb=False):
+        """
+
+        Args:
+            output_size(int): the number of classes
+            embeddings(bool):  the 2D matrix with the pretrained embeddings
+            trainable_emb(bool): train (finetune) or freeze the weights
+                the embedding layer
+        """
+
+        super(LSTMDNN, self).__init__()
+
+        self.emb_dim = embeddings.shape[1]
+
+        # 1 - define the embedding layer from pretrained weights
+        self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
+
+        # 4 - define a non-linear transformation of the representations
+        self.tanh = nn.Tanh()
+
+        # LSTM
+        self.lstm_embed = nn.LSTM(input_size=self.emb_dim,
+                           hidden_size=self.emb_dim, batch_first=True)
+
+        # the dropout "layer" for the output of the RNN
+        # self.drop_lstm = nn.Dropout(dropout_rnn)
+
+        # 5 - define the final Linear layer which maps the representations to the classes
+        self.final = nn.Linear(self.emb_dim, output_size)
+
+    def forward(self, x, lengths):
+        """
+        This is the heart of the model.
+        This function, defines how the data passes through the network.
+
+        Returns: the logits for each class
+
+        """
+        self.batch_size = lengths[0]
+        self.l = lengths[1]
+        self.maxlen = x.shape[1]
+
+        # 1 - embed the words, using the embedding layer
+
+        # batch_size, 21, emb_dim
+        embedding = self.embed(x.long())
+        if (torch.cuda.is_available()):
+            embedding = embedding.cuda()
+
+        # 2 - construct a sentence representation out of the word embeddings
+
         # h_N = torch.zeros([self.batch_size, self.maxlen, self.emb_dim])
         output, (h, c) = self.lstm_embed(embedding.float())
         # h_N[i] = h
         last = self.last_timestep(output, self.l)
         print(h[-1].shape)
 
-        raise ValueError("Poutsa")
+        raise ValueError
 
-        representations = self._mean_pooling(embedding, self.l)
-        # representations = torch.cat((self._mean_pooling(embedding, self.l), self._max_pooling(embedding)), 0)
-        # lstm_representations = torch.cat((self._mean_pooling(h_N, self.l), self._max_pooling(h_N)), 0)
+        # representations = self.mean_pooling(embedding, self.l)
+        representations = torch.cat((self.mean_pooling(output, self.l), self.max_pooling(output)), 0)
+
         # 3 - transform the representations to new ones.
-        # EX6
         # representations = self.tanh(representations)
 
         # 4 - project the representations to classes using a linear layer
-        # EX6
+        logits = self.final(representations)
+
+        return logits
+
+class AttentionDNN(nn.Module):
+    """
+    1. We embed the words in the input texts using an embedding layer
+    2. We compute the min, mean, max of the word embeddings in each sample
+       and use it as the feature representation of the sequence.
+    4. We project with a linear layer the representation
+       to the number of classes.ngth)
+    """
+
+    def __init__(self, output_size, embeddings, trainable_emb=False):
+        """
+
+        Args:
+            output_size(int): the number of classes
+            embeddings(bool):  the 2D matrix with the pretrained embeddings
+            trainable_emb(bool): train (finetune) or freeze the weights
+                the embedding layer
+        """
+
+        super(AttentionDNN, self).__init__()
+
+        self.emb_dim = embeddings.shape[1]
+
+        # 1 - define the embedding layer from pretrained weights
+        self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
+
+        self.attention = SelfAttention(self.emb_dim, batch_first=True)
+
+        # 5 - define the final Linear layer which maps the representations to the classes
+        self.final = nn.Linear(self.emb_dim, output_size)
+
+    def forward(self, x, lengths):
+        """
+        This is the heart of the model.
+        This function, defines how the data passes through the network.
+
+        Returns: the logits for each class
+
+        """
+        self.batch_size = lengths[0]
+        self.l = lengths[1]
+        self.maxlen = x.shape[1]
+
+        # 1 - embed the words, using the embedding layer
+
+        # batch_size, 21, emb_dim
+        embedding = self.embed(x.long())
+        if (torch.cuda.is_available()):
+            embedding = embedding.cuda()
+
+        # 2 - construct a sentence representation out of the word embeddings
+
+        representations, attentions = self.attention(embedding, self.l)
+
+        # 4 - project the representations to classes using a linear layer
+        logits = self.final(representations)
+
+        return logits
+
+class AttentionLSTMDNN(nn.Module):
+    """
+    1. We embed the words in the input texts using an embedding layer
+    2. We compute the min, mean, max of the word embeddings in each sample
+       and use it as the feature representation of the sequence.
+    4. We project with a linear layer the representation
+       to the number of classes.ngth)
+    """
+
+    def last_timestep(self, unpacked, lengths):
+        # Index of the last output for each sequence.
+        idx = (lengths - 1).view(-1, 1).expand(unpacked.size(0),
+                                               unpacked.size(2)).unsqueeze(1)
+        return unpacked.gather(1, idx).squeeze()
+
+    def __init__(self, output_size, embeddings, trainable_emb=False):
+        """
+
+        Args:
+            output_size(int): the number of classes
+            embeddings(bool):  the 2D matrix with the pretrained embeddings
+            trainable_emb(bool): train (finetune) or freeze the weights
+                the embedding layer
+        """
+
+        super(AttentionLSTMDNN, self).__init__()
+
+        self.emb_dim = embeddings.shape[1]
+
+        # 1 - define the embedding layer from pretrained weights
+        self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
+
+        # LSTM
+        self.lstm_embed = nn.LSTM(input_size=self.emb_dim,
+                           hidden_size=self.emb_dim, batch_first=True)
+
+        # the dropout "layer" for the output of the RNN
+        # self.drop_lstm = nn.Dropout(dropout_rnn)
+
+        self.attention = SelfAttention(self.emb_dim, batch_first=True)
+
+        # 5 - define the final Linear layer which maps the representations to the classes
+        self.final = nn.Linear(self.emb_dim, output_size)
+
+    def forward(self, x, lengths):
+        """
+        This is the heart of the model.
+        This function, defines how the data passes through the network.
+
+        Returns: the logits for each class
+
+        """
+        self.batch_size = lengths[0]
+        self.l = lengths[1]
+        self.maxlen = x.shape[1]
+
+        # 1 - embed the words, using the embedding layer
+
+        # batch_size, 21, emb_dim
+        embedding = self.embed(x.long())
+        if (torch.cuda.is_available()):
+            embedding = embedding.cuda()
+
+        # 2 - construct a sentence representation out of the word embeddings
+
+        # # h_N = torch.zeros([self.batch_size, self.maxlen, self.emb_dim])
+        output, (h, c) = self.lstm_embed(embedding.float())
+        # # h_N[i] = h
+        last = self.last_timestep(output, self.l)
+        # print(h[-1].shape)
+
+        representations, attentions = self.attention(last, self.l)
+
+        # 4 - project the representations to classes using a linear layer
         logits = self.final(representations)
 
         return logits

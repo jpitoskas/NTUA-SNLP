@@ -1,3 +1,8 @@
+import torch
+from torch import nn
+from torch.autograd import Variable
+from torch.nn import Parameter, init
+
 class SelfAttention(nn.Module):
     def __init__(self, attention_size, batch_first=False, non_linearity="tanh"):
         super(SelfAttention, self).__init__()

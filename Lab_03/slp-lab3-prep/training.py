@@ -38,15 +38,11 @@ def train_dataset(_epoch, dataloader, model, loss_function, optimizer):
     device = next(model.parameters()).device
 
     for index, batch in enumerate(dataloader, 1):
-        if (index == num_batches-1):
-            break
+
         # get the inputs (batch)
         inputs, labels, lengths = batch
 
         # move the batch tensors to the right device
-        # if (torch.cuda.is_available()):
-        #     batch = map(lambda x : x.cuda(get_gpu_id()), batch)
-        # device = torch.device('cpu')
         inputs = Variable(inputs).to(device)  # EX9
         labels = Variable(labels).to(device)
         lengths = Variable(lengths).to(device)
@@ -100,15 +96,11 @@ def eval_dataset(dataloader, model, loss_function):
     # so we do everything under torch.no_grad()
     with torch.no_grad():
         for index, batch in enumerate(dataloader, 1):
-            if (index == num_batches-1):
-                break
+
             # get the inputs (batch)
             inputs, labels, lengths = batch
 
             # Step 1 - move the batch tensors to the right device
-            # if (torch.cuda.is_available()):
-            #     batch = map(lambda x : x.cuda(get_gpu_id()), batch)
-            # device = torch.device('cpu')
             inputs = Variable(inputs).to(device)  # EX9
             labels = Variable(labels).to(device)
             lengths = Variable(lengths).to(device)
@@ -127,13 +119,8 @@ def eval_dataset(dataloader, model, loss_function):
 
             # Step 5 - collect the predictions, gold labels and batch loss
             # EX9
-            start = index * dataloader.batch_size
-            end = start + dataloader.batch_size
-            if (index == num_batches-1):
-                end = num_elements
-            y_pred[start:end] = posibol
-            y[start:end] = labels
-
+            y_pred.extend(list(posibol.data.cpu().numpy().squeeze()))
+            y.extend(list(labels.data.cpu().numpy().squeeze()))
 
             running_loss += loss.data.item()
 

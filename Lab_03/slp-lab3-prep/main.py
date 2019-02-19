@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 from config import EMB_PATH
 from dataloading import SentenceDataset
-from models import BaselineDNN
+from models import PreLabBaselineDNN, MeanMaxDNN, LSTMDNN, AttentionDNN, AttentionLSTMDNN
 from training import train_dataset, eval_dataset
 from utils.load_datasets import load_MR, load_Semeval2017A
 from utils.load_embeddings import load_word_vectors
@@ -34,15 +34,14 @@ EMBEDDINGS = os.path.join(EMB_PATH, "glove.6B.50d.txt")
 EMB_DIM = 50
 
 EMB_TRAINABLE = False
-BATCH_SIZE = 64
-EPOCHS = 50
+BATCH_SIZE = 128
+EPOCHS = 5
 DATASET = "MR"  # options: "MR", "Semeval2017A"
 
 # if your computer has a CUDA compatible gpu use it, otherwise use the cpu
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
 print(torch.version.cuda)
-# DEVICE = torch.device('cpu')
 
 ########################################################
 # Define PyTorch datasets and dataloaders
@@ -61,33 +60,15 @@ else:
     raise ValueError("Invalid dataset")
 
 le = LabelEncoder()
-y_labels = y_train[:10]
-
 # convert data labels from strings to integers
 y_train = le.fit_transform(y_train)  # EX1
 y_test = le.fit_transform(y_test)  # EX1
 n_classes = le.classes_.size  # EX1 - LabelEncoder.classes_.size
 
-# print("\nEX1: First 10 train labels with encodings:\n")
-# for i in range(10):
-    # print(str(y_labels[i]) + " -> " + str(y_train[i]))
 
 # Define our PyTorch-based Dataset
 train_set = SentenceDataset(X_train, y_train, word2idx)
-# print("\nEX2: First 10 tokenized train data:\n")
-# for i in range(10):
-    # print(train_set.data[i])
-    # print(train_set.labels[i])
 test_set = SentenceDataset(X_test, y_test, word2idx)
-
-# print("\nEX3: 5 random SentenceDatasets from train set:\n")
-# for _ in range(5):
-#     rnd = randint(0, len(train_set))
-#     example, label, length = train_set[rnd]
-    # print(train_set.data[rnd])
-    # print(example)
-    # print(label)
-    # print(length)
 
 # EX4 - Define our PyTorch-based DataLoader
 train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)  # EX7
@@ -96,7 +77,7 @@ test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=True)  # EX7
 #############################################################################
 # Model Definition (Model, Loss Function, Optimizer)
 #############################################################################
-model = BaselineDNN(output_size=n_classes,  # EX8
+model = PreLabBaselineDNN(output_size=n_classes,  # EX8
                     embeddings=embeddings,
                     trainable_emb=EMB_TRAINABLE)
 
@@ -119,8 +100,8 @@ optimizer = torch.optim.RMSprop(parameters)  # EX8
 # Training Pipeline
 #############################################################################
 
-losses_train = []
-losses_test = []
+total_train_loss = []
+total_test_loss = []
 
 for epoch in range(1, EPOCHS + 1):
     # train the model for one epoch
@@ -137,17 +118,15 @@ for epoch in range(1, EPOCHS + 1):
                                                          criterion)
     print("Test Set: loss={:.4f}, accuracy={:.4f}, f1={:.4f}, recall={:.4f}".format(test_loss, accuracy_score(y_test_gold, y_test_pred), f1_score(y_test_gold, y_test_pred, average='macro'), recall_score(y_train_gold, y_train_pred, average='macro')))
 
-    losses_train.append(train_loss)
-    losses_test.append(test_loss)
-
-losses_train_arr = np.array(losses_train)
-losses_test_arr = np.array(losses_test)
+    total_train_loss.append(train_loss)
+    total_test_loss.append(test_loss)
 
 plt.figure(1)
-plt.title("Train loss")
-plt.plot(losses_train_arr)
-plt.show()
-plt.figure(2)
-plt.title("Test loss")
-plt.plot(losses_test_arr)
+title = "Train and Test loss for "+ str(DATASET) + " Dataset with " + str(EMB_DIM) + " Embedding Dimension, " + str(EPOCHS) + " Epochs"
+plt.title(title)
+plt.plot(np.array(total_train_loss), 'o-', label='Train')
+plt.plot(np.array(total_test_loss), 'o-', label='Test')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
 plt.show()
