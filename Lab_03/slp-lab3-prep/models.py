@@ -206,9 +206,8 @@ class LSTMDNN(nn.Module):
 
     def last_timestep(self, unpacked, lengths):
         # Index of the last output for each sequence.
-        idx = (lengths - 1).view(-1, 1).expand(unpacked.size(0),
-                                               unpacked.size(2)).unsqueeze(1)
-        return unpacked.gather(1, idx).squeeze()
+        index = (lengths - 1).view(-1, 1).expand(unpacked.size(0), unpacked.size(2)).unsqueeze(1)
+        return unpacked.gather(1, index).squeeze()
 
     def __init__(self, output_size, embeddings, trainable_emb=False):
         """
@@ -264,14 +263,15 @@ class LSTMDNN(nn.Module):
         # h_N = torch.zeros([self.batch_size, self.maxlen, self.emb_dim])
         output, (h, c) = self.lstm_embed(embedding.float())
         # h_N[i] = h
-        last = self.last_timestep(output, self.l)
-        print(h[-1].shape)
 
-        raise ValueError
+        # last(batch_size * hidden_size) is h for last timestep, for each sentence of the batch
+        last = self.last_timestep(output, self.l)
+        print("kavli")
+        # print(h[-1].shape)
 
         # representations = self.mean_pooling(embedding, self.l)
-        representations = torch.cat((self.mean_pooling(output, self.l), self.max_pooling(output)), 0)
-
+        representations = torch.cat((last, self.mean_pooling(output, self.l), self.max_pooling(output)), 0)
+        raise ValueError
         # 3 - transform the representations to new ones.
         # representations = self.tanh(representations)
 
@@ -350,9 +350,9 @@ class AttentionLSTMDNN(nn.Module):
 
     def last_timestep(self, unpacked, lengths):
         # Index of the last output for each sequence.
-        idx = (lengths - 1).view(-1, 1).expand(unpacked.size(0),
+        index = (lengths - 1).view(-1, 1).expand(unpacked.size(0),
                                                unpacked.size(2)).unsqueeze(1)
-        return unpacked.gather(1, idx).squeeze()
+        return unpacked.gather(1, index).squeeze()
 
     def __init__(self, output_size, embeddings, trainable_emb=False):
         """
@@ -372,8 +372,7 @@ class AttentionLSTMDNN(nn.Module):
         self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
 
         # LSTM
-        self.lstm_embed = nn.LSTM(input_size=self.emb_dim,
-                           hidden_size=self.emb_dim, batch_first=True)
+        self.lstm_embed = nn.LSTM(input_size=self.emb_dim, hidden_size=self.emb_dim, batch_first=True)
 
         # the dropout "layer" for the output of the RNN
         # self.drop_lstm = nn.Dropout(dropout_rnn)
@@ -407,6 +406,88 @@ class AttentionLSTMDNN(nn.Module):
         # # h_N = torch.zeros([self.batch_size, self.maxlen, self.emb_dim])
         output, (h, c) = self.lstm_embed(embedding.float())
         # # h_N[i] = h
+        last = self.last_timestep(output, self.l)
+        # print(h[-1].shape)
+
+        representations, attentions = self.attention(last, self.l)
+
+        # 4 - project the representations to classes using a linear layer
+        logits = self.final(representations)
+
+        return logits
+
+class AttentionBidirectionalLSTMDNN(nn.Module):
+    """
+    1. We embed the words in the input texts using an embedding layer
+    2. We compute the min, mean, max of the word embeddings in each sample
+       and use it as the feature representation of the sequence.
+    4. We project with a linear layer the representation
+       to the number of classes.ngth)
+    """
+
+    def last_timestep(self, unpacked, lengths):
+        # Index of the last output for each sequence.
+        index = (lengths - 1).view(-1, 1).expand(unpacked.size(0), unpacked.size(2)).unsqueeze(1)
+        return unpacked.gather(1, index).squeeze()
+
+    def __init__(self, output_size, embeddings, trainable_emb=False):
+        """
+
+        Args:
+            output_size(int): the number of classes
+            embeddings(bool):  the 2D matrix with the pretrained embeddings
+            trainable_emb(bool): train (finetune) or freeze the weights
+                the embedding layer
+        """
+
+        super(AttentionBidirectionalLSTMDNN, self).__init__()
+
+        self.emb_dim = embeddings.shape[1]
+
+        # 1 - define the embedding layer from pretrained weights
+        self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
+
+        # LSTM
+        self.lstm_embed = nn.LSTM(input_size=self.emb_dim, hidden_size=self.emb_dim, batch_first=True, bidirectional=True)
+
+        # the dropout "layer" for the output of the RNN
+        # self.drop_lstm = nn.Dropout(dropout_rnn)
+
+        self.attention = SelfAttention(2*self.emb_dim, batch_first=True)
+
+        # 5 - define the final Linear layer which maps the representations to the classes
+        self.final = nn.Linear(2*self.emb_dim, output_size)
+
+    def forward(self, x, lengths):
+        """
+        This is the heart of the model.
+        This function, defines how the data passes through the network.
+
+        Returns: the logits for each class
+
+        """
+        self.batch_size = lengths[0]
+        self.l = lengths[1]
+        self.maxlen = x.shape[1]
+
+        # 1 - embed the words, using the embedding layer
+
+        # batch_size, 21, emb_dim
+        embedding = self.embed(x.long())
+        if (torch.cuda.is_available()):
+            embedding = embedding.cuda()
+
+        # 2 - construct a sentence representation out of the word embeddings
+
+        # # h_N = torch.zeros([self.batch_size, self.maxlen, self.emb_dim])
+        output, (h, c) = self.lstm_embed(embedding.float())
+        # # h_N[i] = h
+        hidden_size = output.size(2) // 2
+        # straight RNN output and reverse one
+        lstm_output = output[:, :, :hidden_size]
+        lstm_reverse_output = output[:, :, hidden_size:]
+        print(lstm_output.size(), lstm_reverse_output.size())
+        raise ValueError
         last = self.last_timestep(output, self.l)
         # print(h[-1].shape)
 
