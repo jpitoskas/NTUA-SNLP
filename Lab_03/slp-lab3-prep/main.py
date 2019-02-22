@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 from config import EMB_PATH
 from dataloading import SentenceDataset
-from models import PreLabBaselineDNN, MeanMaxDNN, LSTMDNN, AttentionDNN, AttentionLSTMDNN, AttentionBidirectionalLSTMDNN
+from models import PreLabBaselineDNN, MeanMaxDNN, LSTMDNN, AttentionDNN, AttentionLSTMDNN, AttentionBidirectionalLSTMDNN, BidirectionalLSTMDNN
 from training import train_dataset, eval_dataset
 from utils.load_datasets import load_MR, load_Semeval2017A
 from utils.load_embeddings import load_word_vectors
@@ -35,7 +35,7 @@ EMB_DIM = 50
 
 EMB_TRAINABLE = False
 BATCH_SIZE = 128
-EPOCHS = 5
+EPOCHS = 30
 DATASET = "MR"  # options: "MR", "Semeval2017A"
 
 # if your computer has a CUDA compatible gpu use it, otherwise use the cpu
@@ -60,9 +60,10 @@ else:
     raise ValueError("Invalid dataset")
 
 le = LabelEncoder()
+le = le.fit(y_train)
 # convert data labels from strings to integers
-y_train = le.fit_transform(y_train)  # EX1
-y_test = le.fit_transform(y_test)  # EX1
+y_train = le.transform(y_train)  # EX1
+y_test = le.transform(y_test)  # EX1
 n_classes = le.classes_.size  # EX1 - LabelEncoder.classes_.size
 
 
@@ -77,7 +78,7 @@ test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=True)  # EX7
 #############################################################################
 # Model Definition (Model, Loss Function, Optimizer)
 #############################################################################
-model = AttentionBidirectionalLSTMDNN(output_size=n_classes,  # EX8
+model = PreLabBaselineDNN(output_size=n_classes,  # EX8
                     embeddings=embeddings,
                     trainable_emb=EMB_TRAINABLE)
 

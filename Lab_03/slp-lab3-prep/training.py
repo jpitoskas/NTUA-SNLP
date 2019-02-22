@@ -115,7 +115,7 @@ def eval_dataset(dataloader, model, loss_function):
             loss = loss_function(outputs, labels)  # EX9
 
             # Step 4 - make predictions (class = argmax of posteriors)
-            _, posibol = torch.max(outputs, 1)  # EX9
+            _, posibol = torch.max(outputs.data, 1)  # EX9
 
             # Step 5 - collect the predictions, gold labels and batch loss
             # EX9

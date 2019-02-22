@@ -2,3 +2,4 @@
 solutions/
 *.p
 __pycache__/
+*.PNG
