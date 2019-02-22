@@ -89,12 +89,13 @@ print(model)
 
 # We optimize ONLY those parameters that are trainable (p.requires_grad==True)
 criterion = torch.nn.CrossEntropyLoss()  # EX8
-parameters = []  # EX8
-for p in model.parameters():
-    # p.requires_grad = False
-    if(p.requires_grad==True):
-        parameters.append(p)
-optimizer = torch.optim.RMSprop(parameters)  # EX8
+# parameters = []  # EX8
+# for p in model.parameters():
+#     # p.requires_grad = False
+#     if(p.requires_grad==True):
+#         parameters.append(p)
+parameters = filter(lambda p: p.requires_grad, model.parameters())
+optimizer = torch.optim.Adam(parameters)  # EX8
 # raise NotImplementedError
 
 #############################################################################
