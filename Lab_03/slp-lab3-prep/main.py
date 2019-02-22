@@ -35,7 +35,7 @@ EMB_DIM = 50
 
 EMB_TRAINABLE = False
 BATCH_SIZE = 128
-EPOCHS = 30
+EPOCHS = 50
 DATASET = "MR"  # options: "MR", "Semeval2017A"
 
 # if your computer has a CUDA compatible gpu use it, otherwise use the cpu
@@ -60,8 +60,8 @@ else:
     raise ValueError("Invalid dataset")
 
 le = LabelEncoder()
-le = le.fit(y_train)
 # convert data labels from strings to integers
+le = le.fit(y_train)
 y_train = le.transform(y_train)  # EX1
 y_test = le.transform(y_test)  # EX1
 n_classes = le.classes_.size  # EX1 - LabelEncoder.classes_.size
@@ -78,7 +78,7 @@ test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=True)  # EX7
 #############################################################################
 # Model Definition (Model, Loss Function, Optimizer)
 #############################################################################
-model = PreLabBaselineDNN(output_size=n_classes,  # EX8
+model = LSTMDNN(output_size=n_classes,  # EX8
                     embeddings=embeddings,
                     trainable_emb=EMB_TRAINABLE)
 

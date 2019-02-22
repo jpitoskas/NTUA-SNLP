@@ -149,10 +149,13 @@ class MeanMaxDNN(nn.Module):
         self.emb_dim = embeddings.shape[1]
 
         # 1 - define the embedding layer from pretrained weights
-        self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
+        # self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
+        self.embed = nn.Embedding(num_embeddings=embeddings.shape[0], embedding_dim=embeddings.shape[1])
+        self.embed.weight = nn.Parameter(torch.from_numpy(embeddings), requires_grad=trainable_emb)
 
         # 5 - define the final Linear layer which maps the representations to the classes
-        self.final = nn.Linear(self.emb_dim, output_size)
+
+        self.final = nn.Linear(2*self.emb_dim, output_size)
 
     def forward(self, x, lengths):
         """
@@ -174,7 +177,10 @@ class MeanMaxDNN(nn.Module):
             embedding = embedding.cuda()
 
         # 2 - construct a sentence representation out of the word embeddings
-        representations = torch.cat((self.mean_pooling(embedding, self.l), self.max_pooling(embedding)), 0)
+        representations = torch.cat((self.mean_pooling(embedding, self.l), self.max_pooling(embedding)), 1)
+
+        # print(representations.size())
+        # raise ValueError("tsiba")
 
         # 4 - project the representations to classes using a linear layer
         logits = self.final(representations)
@@ -224,8 +230,9 @@ class LSTMDNN(nn.Module):
         self.emb_dim = embeddings.shape[1]
 
         # 1 - define the embedding layer from pretrained weights
-        self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
-
+        # self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
+        self.embed = nn.Embedding(num_embeddings=embeddings.shape[0], embedding_dim=embeddings.shape[1])
+        self.embed.weight = nn.Parameter(torch.from_numpy(embeddings), requires_grad=trainable_emb)
         # 4 - define a non-linear transformation of the representations
         self.tanh = nn.Tanh()
 
@@ -237,7 +244,7 @@ class LSTMDNN(nn.Module):
         # self.drop_lstm = nn.Dropout(dropout_rnn)
 
         # 5 - define the final Linear layer which maps the representations to the classes
-        self.final = nn.Linear(self.emb_dim, output_size)
+        self.final = nn.Linear(3*self.emb_dim, output_size)
 
     def forward(self, x, lengths):
         """
@@ -266,12 +273,12 @@ class LSTMDNN(nn.Module):
 
         # last(batch_size * hidden_size) is h for last timestep, for each sentence of the batch
         last = self.last_timestep(output, self.l)
-        print("kavli")
+
         # print(h[-1].shape)
 
         # representations = self.mean_pooling(embedding, self.l)
-        representations = torch.cat((last, self.mean_pooling(output, self.l), self.max_pooling(output)), 0)
-        raise ValueError
+        representations = torch.cat((last, self.mean_pooling(output, self.l), self.max_pooling(output)), 1)
+
         # 3 - transform the representations to new ones.
         # representations = self.tanh(representations)
 
@@ -370,7 +377,7 @@ class BidirectionalLSTMDNN(nn.Module):
         # print(h[-1].shape)
 
         # representations = self.mean_pooling(embedding, self.l)
-        representations = torch.cat((last, self.mean_pooling(output, self.l), self.max_pooling(output)), 0)
+        representations = torch.cat((last, self.mean_pooling(output, self.l), self.max_pooling(output)), 1)
         # print(representations.size())
         # print(last)
         # print(self.mean_pooling(output, self.l))
