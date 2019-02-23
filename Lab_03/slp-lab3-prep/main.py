@@ -3,6 +3,7 @@ import warnings
 from random import randint
 import numpy as np
 import matplotlib.pyplot as plt
+import json
 
 from sklearn.exceptions import UndefinedMetricWarning
 from sklearn.preprocessing import LabelEncoder
@@ -42,7 +43,7 @@ EMB_DIM = 50
 
 EMB_TRAINABLE = False
 BATCH_SIZE = 128
-EPOCHS = 1
+EPOCHS = 50
 DATASET = "MR"  # options: "MR", "Semeval2017A"
 
 # if your computer has a CUDA compatible gpu use it, otherwise use the cpu
@@ -85,7 +86,7 @@ test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=True)  # EX7
 #############################################################################
 # Model Definition (Model, Loss Function, Optimizer)
 #############################################################################
-model = PreLabBaselineDNN(output_size=n_classes,  # EX8
+model = AttentionDNN(output_size=n_classes,  # EX8
                     embeddings=embeddings,
                     trainable_emb=EMB_TRAINABLE)
 
@@ -118,12 +119,12 @@ for epoch in range(1, EPOCHS + 1):
     train_dataset(epoch, train_loader, model, criterion, optimizer)
 
     # evaluate the performance of the model, on both data sets
-    train_loss, (y_train_gold, y_train_pred) = eval_dataset(train_loader,
+    train_loss, _, (y_train_gold, y_train_pred) = eval_dataset(train_loader,
                                                             model,
                                                             criterion)
     print()
     print("Train Set: loss={:.4f}, accuracy={:.4f}, f1={:.4f}, recall={:.4f}".format(train_loss, accuracy_score(y_train_gold, y_train_pred), f1_score(y_train_gold, y_train_pred, average='macro'), recall_score(y_train_gold, y_train_pred, average='macro')))
-    test_loss, (y_test_gold, y_test_pred) = eval_dataset(test_loader,
+    test_loss, _, (y_test_gold, y_test_pred) = eval_dataset(test_loader,
                                                          model,
                                                          criterion)
     print("Test Set: loss={:.4f}, accuracy={:.4f}, f1={:.4f}, recall={:.4f}".format(test_loss, accuracy_score(y_test_gold, y_test_pred), f1_score(y_test_gold, y_test_pred, average='macro'), recall_score(y_train_gold, y_train_pred, average='macro')))
@@ -139,7 +140,7 @@ for epoch in range(1, EPOCHS + 1):
     total_train_loss.append(train_loss)
     total_test_loss.append(test_loss)
 
-best_model = PreLabBaselineDNN(output_size=n_classes,  # EX8
+best_model = AttentionDNN(output_size=n_classes,  # EX8
                     embeddings=embeddings,
                     trainable_emb=EMB_TRAINABLE)
 
@@ -153,7 +154,9 @@ optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 epoch = checkpoint['epoch']
 loss = checkpoint['loss']
 
-_, (best_y_test_gold, best_y_test_pred) = eval_dataset(test_loader,
+eval_loader = DataLoader(test_set, batch_size=BATCH_SIZE)
+
+_, attentions, (best_y_test_gold, best_y_test_pred) = eval_dataset(eval_loader,
                                                      best_model,
                                                      criterion)
 pred_file = open(PREDICTION, "w")
@@ -164,51 +167,18 @@ pred_file.close()
 #NeAt JSONs
 
 data_file = open(DATA_FILE_PATH,'w')
-
-for i in range(len(test_set.data)):
-    label = best_y_test_pred[i]
-    print(label)
-    sentence = test_set.data[i]
-    print(sentence)
-    # data_file.write('{\n')
-    #
-    # data_file.write('    "text":  [\n')
-    # for word in sentence:
-    #     data_file.write('      "' + word + '",\n')
-    # data_file.write('    ],\n')
-    #
-    # data_file.write('    "text":  [\n')
-    # data_file.write(str(label) + "\n")
-    # data_file.write('    ],\n')
-    #
-    # data_file.write('    "attention":  [\n')
-    # data_file.write('    ],\n')
-    #
-    # data_file.write('    "id": "sample_"' +str(i) + '"\n')
-
+data = []
+for i in range(20):
+    data.append({'text' :test_set.data[i], 'label' : int(best_y_test_gold[i]), 'prediction': int(best_y_test_pred[i]), 'attention' : attentions[i], 'id' : "sample_"+str(i) })
+    # print(data)
+data_file.write(json.dumps(data, indent=4))
 data_file.close()
 
 
-filename = open(LABELS_FILE_PATH,'w')
-
-filename.write('{\n')
-filename.write('  "2":  {\n')
-filename.write('    "name": "positive",\n')
-filename.write('    "desc": "really_liked_it"\n')
-filename.write('  },\n')
-
-filename.write('  "0":  {\n')
-filename.write('    "name": "negative",\n')
-filename.write('    "desc": "really_hate_it"\n')
-filename.write('  },\n')
-
-filename.write('  "1":  {\n')
-filename.write('    "name": "neutral",\n')
-filename.write('    "desc": "dont_care"\n')
-filename.write('  },\n')
-filename.write('}\n')
-
-filename.close()
+label_file = open(LABELS_FILE_PATH,'w')
+label_data = {'0':{'name': "negative", 'desc': ":("}, '1':{'name': "positive", 'desc': ":)"}}
+label_file.write(json.dumps(label_data, indent=4))
+label_file.close()
 
 
 plt.figure(1)

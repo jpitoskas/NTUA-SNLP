@@ -54,7 +54,7 @@ def train_dataset(_epoch, dataloader, model, loss_function, optimizer):
 
         # Step 2 - forward pass: y' = model(x)
         all_length = [dataloader.batch_size, lengths]
-        outputs = model(inputs, all_length)  # EX9
+        outputs, _ = model(inputs, all_length)  # EX9
 
         # Step 3 - compute loss: L = loss_function(y, y')
         loss = loss_function(outputs, labels)  # EX9
@@ -88,6 +88,7 @@ def eval_dataset(dataloader, model, loss_function):
 
     y_pred = []  # the predicted labels
     y = []  # the gold labels
+    attentions = []
 
     # obtain the model's device ID
     device = next(model.parameters()).device
@@ -107,7 +108,7 @@ def eval_dataset(dataloader, model, loss_function):
 
             # Step 2 - forward pass: y' = model(x)
             all_length = [dataloader.batch_size, lengths]
-            outputs = model(inputs, all_length)  # EX9
+            outputs, attention = model(inputs, all_length)  # EX9
 
             # Step 3 - compute loss.
             # We compute the loss only for inspection (compare train/test loss)
@@ -121,7 +122,9 @@ def eval_dataset(dataloader, model, loss_function):
             # EX9
             y_pred.extend(list(posibol.data.cpu().numpy().squeeze()))
             y.extend(list(labels.data.cpu().numpy().squeeze()))
+            attentions.extend(attention.data.cpu().numpy().squeeze().tolist())
+
 
             running_loss += loss.data.item()
 
-    return running_loss / index, (y_pred, y)
+    return running_loss / index, attentions, (y_pred, y)

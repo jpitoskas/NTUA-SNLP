@@ -109,7 +109,7 @@ class PreLabBaselineDNN(nn.Module):
         # EX6
         logits = self.final(representations)
 
-        return logits
+        return logits, torch.zeros([2, 4])
 
 class MeanMaxDNN(nn.Module):
     """
@@ -185,7 +185,7 @@ class MeanMaxDNN(nn.Module):
         # 4 - project the representations to classes using a linear layer
         logits = self.final(representations)
 
-        return logits
+        return logits, torch.zeros([2, 4])
 
 class LSTMDNN(nn.Module):
     """
@@ -285,7 +285,7 @@ class LSTMDNN(nn.Module):
         # 4 - project the representations to classes using a linear layer
         logits = self.final(last)
 
-        return logits
+        return logits, torch.zeros([2, 4])
 
 class BidirectionalLSTMDNN(nn.Module):
     """
@@ -389,7 +389,7 @@ class BidirectionalLSTMDNN(nn.Module):
         # 4 - project the representations to classes using a linear layer
         logits = self.final(representations)
 
-        return logits
+        return logits, torch.zeros([2, 4])
 
 class AttentionDNN(nn.Module):
     """
@@ -454,7 +454,7 @@ class AttentionDNN(nn.Module):
         # 4 - project the representations to classes using a linear layer
         logits = self.final(representations)
 
-        return logits
+        return logits, attentions
 
 class AttentionLSTMDNN(nn.Module):
     """
@@ -533,7 +533,7 @@ class AttentionLSTMDNN(nn.Module):
         # 4 - project the representations to classes using a linear layer
         logits = self.final(representations)
 
-        return logits
+        return logits, attentions
 
 class AttentionBidirectionalLSTMDNN(nn.Module):
     """
@@ -616,4 +616,4 @@ class AttentionBidirectionalLSTMDNN(nn.Module):
         # 4 - project the representations to classes using a linear layer
         logits = self.final(representations)
 
-        return logits
+        return logits, torch.zeros([2, 4])
