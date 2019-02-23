@@ -238,13 +238,13 @@ class LSTMDNN(nn.Module):
 
         # LSTM
         self.lstm_embed = nn.LSTM(input_size=self.emb_dim,
-                           hidden_size=self.emb_dim, batch_first=True)
+                           hidden_size=20, batch_first=True)
 
         # the dropout "layer" for the output of the RNN
         # self.drop_lstm = nn.Dropout(dropout_rnn)
 
         # 5 - define the final Linear layer which maps the representations to the classes
-        self.final = nn.Linear(3*self.emb_dim, output_size)
+        self.final = nn.Linear(20, output_size)
 
     def forward(self, x, lengths):
         """
@@ -277,13 +277,13 @@ class LSTMDNN(nn.Module):
         # print(h[-1].shape)
 
         # representations = self.mean_pooling(embedding, self.l)
-        representations = torch.cat((last, self.mean_pooling(output, self.l), self.max_pooling(output)), 1)
+        # representations = torch.cat((last, self.mean_pooling(output, self.l), self.max_pooling(output)), 1)
 
         # 3 - transform the representations to new ones.
         # representations = self.tanh(representations)
 
         # 4 - project the representations to classes using a linear layer
-        logits = self.final(representations)
+        logits = self.final(last)
 
         return logits
 
@@ -343,7 +343,7 @@ class BidirectionalLSTMDNN(nn.Module):
         # self.drop_lstm = nn.Dropout(dropout_rnn)
 
         # 5 - define the final Linear layer which maps the representations to the classes
-        self.final = nn.Linear(self.emb_dim, output_size)
+        self.final = nn.Linear(6*self.emb_dim, output_size)
 
     def forward(self, x, lengths):
         """
@@ -365,19 +365,18 @@ class BidirectionalLSTMDNN(nn.Module):
             embedding = embedding.cuda()
 
         # 2 - construct a sentence representation out of the word embeddings
-
-        # h_N = torch.zeros([self.batch_size, self.maxlen, self.emb_dim])
         output, (h, c) = self.lstm_embed(embedding.float())
-        # h_N[i] = h
+        hidden_size = output.size(2) // 2
+        # straight RNN output and reverse one
+        lstm_output = output[:, :, :hidden_size]
+        lstm_reverse_output = output[:, :, hidden_size:]
 
         # last(batch_size * hidden_size) is h for last timestep, for each sentence of the batch
-        last = self.last_timestep(output, self.l)
-        # print(last.size())
-        # print("kavli")
-        # print(h[-1].shape)
+        last = self.last_timestep(lstm_output, self.l)
+
 
         # representations = self.mean_pooling(embedding, self.l)
-        representations = torch.cat((last, self.mean_pooling(output, self.l), self.max_pooling(output)), 1)
+        representations = torch.cat((last, self.mean_pooling(lstm_output, self.l), self.max_pooling(lstm_output), lstm_reverse_output[:, 0, :], self.mean_pooling(lstm_reverse_output, self.l), self.max_pooling(lstm_reverse_output)), 1)
         # print(representations.size())
         # print(last)
         # print(self.mean_pooling(output, self.l))
@@ -487,7 +486,9 @@ class AttentionLSTMDNN(nn.Module):
         self.emb_dim = embeddings.shape[1]
 
         # 1 - define the embedding layer from pretrained weights
-        self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
+        # self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
+        self.embed = nn.Embedding(num_embeddings=embeddings.shape[0], embedding_dim=embeddings.shape[1])
+        self.embed.weight = nn.Parameter(torch.from_numpy(embeddings), requires_grad=trainable_emb)
 
         # LSTM
         self.lstm_embed = nn.LSTM(input_size=self.emb_dim, hidden_size=self.emb_dim, batch_first=True)
@@ -527,7 +528,7 @@ class AttentionLSTMDNN(nn.Module):
         last = self.last_timestep(output, self.l)
         # print(h[-1].shape)
 
-        representations, attentions = self.attention(last, self.l)
+        representations, attentions = self.attention(output, self.l)
 
         # 4 - project the representations to classes using a linear layer
         logits = self.final(representations)
@@ -566,15 +567,15 @@ class AttentionBidirectionalLSTMDNN(nn.Module):
         self.embed = nn.Embedding.from_pretrained(torch.from_numpy(embeddings), freeze=not(trainable_emb), sparse=False)
 
         # LSTM
-        self.lstm_embed = nn.LSTM(input_size=self.emb_dim, hidden_size=self.emb_dim, batch_first=True, bidirectional=True)
+        self.lstm_embed = nn.LSTM(input_size=self.emb_dim, hidden_size=13, batch_first=True, bidirectional=True)
 
         # the dropout "layer" for the output of the RNN
         # self.drop_lstm = nn.Dropout(dropout_rnn)
 
-        self.attention = SelfAttention(2*self.emb_dim, batch_first=True)
+        self.attention = SelfAttention(13, batch_first=True)
 
         # 5 - define the final Linear layer which maps the representations to the classes
-        self.final = nn.Linear(2*self.emb_dim, output_size)
+        self.final = nn.Linear(2*13, output_size)
 
     def forward(self, x, lengths):
         """
@@ -604,12 +605,13 @@ class AttentionBidirectionalLSTMDNN(nn.Module):
         # straight RNN output and reverse one
         lstm_output = output[:, :, :hidden_size]
         lstm_reverse_output = output[:, :, hidden_size:]
-        print(lstm_output.size(), lstm_reverse_output.size())
-        # raise ValueError
-        last = self.last_timestep(output, self.l)
-        # print(h[-1].shape)
 
-        representations, attentions = self.attention(last, self.l)
+        # last = self.last_timestep(output, self.l)
+
+        forward_representations, _ = self.attention(lstm_output, self.l)
+        reverse_representations, _ = self.attention(lstm_reverse_output, self.l)
+
+        representations = torch.cat((forward_representations, reverse_representations), 1)
 
         # 4 - project the representations to classes using a linear layer
         logits = self.final(representations)
